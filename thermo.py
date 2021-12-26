@@ -19,75 +19,64 @@ set_level(ERROR)
 # OUI Prefix	Company
 # A4:C1:38	Telink Semiconductor (Taipei) Co. Ltd.
 GOVEE_BT_mac_OUI_PREFIX = "A4:C1:38"
-
 H5075_UPDATE_UUID16 = UUID16(0xEC88)
 
 # ###########################################################################
 FORMAT_PRECISION = ".2f"
+CHECK_INTERVAL = int(5)
+DEFAULT_TEMP = float(19)
+ACCEPTABLE_DRIFT = float(1)
 
-check_interval=int(5)
-last_reading=int(time.time()) - (check_interval * 2)
+locations={
+    'GVH5075_E666': {'name': 'bedroom sensor', 'location': 'bedroom', 'temp': float(DEFAULT_TEMP), 'plug': "192.168.2.46"},
+    'GVH5075_570E': {'name': 'garage sensor', 'location': 'garage', 'temp': float(3), 'plug': "192.168.2.40"}
+}
+
+
+last_reading=int(time.time()) - (CHECK_INTERVAL * 2)
 async def process_thermo(reading):
-    global last_reading, check_interval
+    global last_reading
 
     this_reading=int(time.time())
     elapsed=this_reading - last_reading
 
-    if elapsed < check_interval:
+    print(f"Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
+
+    if elapsed < CHECK_INTERVAL:
         return
     
-    if reading['name']=="GVH5075_E666":
-        location="office"
+    if reading['name'] in locations:
+        config=locations[reading['name']]
     else:
-        location="garage"
-
-    if location=="garage":
-        return
-
-    print(f"Location: {location} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
+        return    
     
-    desired=float(21)
-    acceptable_drift=float(1)
-    heater_ip="192.168.2.46"
-    
-    p=SmartPlug(heater_ip)
+    p=SmartPlug(config['plug'])
     await p.update()
     
-    if reading['name']=='GVH5075_E666' and p.is_off and float(reading['temp']) < desired-acceptable_drift :
-        print(f"temp {reading['temp']} is unacceptably cool, turning on panel")
+    if p.is_off and float(reading['temp']) < float(config['temp']) - float(ACCEPTABLE_DRIFT) :
+        print(f"temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
         await p.turn_on()
 
-    if reading['name']=='GVH5075_E666' and p.is_on and float(reading['temp']) > desired+acceptable_drift :
-        print(f"temp {reading['temp']} is unacceptably warm, turning off panel")
+    if p.is_on and float(reading['temp']) > float(config['temp']) + float(ACCEPTABLE_DRIFT) :
+        print(f"temp {reading['temp']} in room {config['location']} is unacceptably warm, turning off panel")
         await p.turn_off()
     
     last_reading=this_reading
 
-# Decode H5075 Temperature into degrees Celcius
-def decode_temp_in_c(encoded_data):
-    return format((encoded_data / 10000), FORMAT_PRECISION)
-
-
-# Decode H5075 Temperature into degrees Fahrenheit
-def decode_temp_in_f(encoded_data):
-    return format((((encoded_data / 10000) * 1.8) + 32), FORMAT_PRECISION)
-
-
-# Decode H5075 percent humidity
-def decode_humidity(encoded_data):
-    return format(((encoded_data % 1000) / 10), FORMAT_PRECISION)
+def reading_from_advertisement(advertisement):
+    mfg_data='{:>7}'.format(int(advertisement.mfg_data.hex()[6:12],16))
+    temperature=float(mfg_data[0:4])/10
+    humidity=float(mfg_data[4:7])/10
+    battery = int(advertisement.mfg_data.hex()[12:14], 16)
+    return {'name': str(advertisement._name), 'temp': float(temperature), 'battery': int(battery), 'humidity': float(humidity)}
 
 # On BLE advertisement callback
 def on_advertisement(advertisement):
     log.debug(advertisement)
 
     if advertisement.address.address.startswith(GOVEE_BT_mac_OUI_PREFIX):
-        mac = advertisement.address.address
         if H5075_UPDATE_UUID16 in advertisement.uuid16s:
-            encoded_data = int(advertisement.mfg_data.hex()[6:12], 16)
-            battery = int(advertisement.mfg_data.hex()[12:14], 16)
-            
-            reading={'name': str(advertisement._name), 'temp': float(decode_temp_in_c(encoded_data)), 'battery': float(battery), 'humidity': float(decode_humidity(encoded_data))}
+            reading = reading_from_advertisement(advertisement)
             asyncio.run(process_thermo(reading))
 
 
