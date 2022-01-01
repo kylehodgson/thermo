@@ -1,3 +1,5 @@
 python-kasa
 bleson
-
+fastapi
+uvicorn
+pydantic
