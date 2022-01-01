@@ -4,6 +4,7 @@ import time
 import os
 import sys
 import asyncio
+import json
 
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, set_level, ERROR, DEBUG
@@ -22,16 +23,25 @@ GOVEE_BT_mac_OUI_PREFIX = "A4:C1:38"
 H5075_UPDATE_UUID16 = UUID16(0xEC88)
 
 # ###########################################################################
-FORMAT_PRECISION = ".2f"
 CHECK_INTERVAL = int(5)
-DEFAULT_TEMP = float(19)
+DEFAULT_TEMP = float(20)
 ACCEPTABLE_DRIFT = float(1)
 
-locations={
-    'GVH5075_E666': {'name': 'bedroom sensor', 'location': 'bedroom', 'temp': float(DEFAULT_TEMP), 'plug': "192.168.2.46"},
-    'GVH5075_570E': {'name': 'garage sensor', 'location': 'garage', 'temp': float(3), 'plug': "192.168.2.40"}
-}
+def load_config():
+    try:
+        f = open('config.json')
+        config=json.load(f)
+        f.close()
+    except OSError:
+        print("Could not read from config.json in load_config")
+    return config
 
+def is_daytime():
+    import datetime
+    now = datetime.datetime.now()
+    if now.hour > 8 and now.hour < 22:
+        return True
+    return False
 
 last_reading=int(time.time()) - (CHECK_INTERVAL * 2)
 async def process_thermo(reading):
@@ -40,19 +50,29 @@ async def process_thermo(reading):
     this_reading=int(time.time())
     elapsed=this_reading - last_reading
 
-    print(f"Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
+    #print(f"Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
 
     if elapsed < CHECK_INTERVAL:
         return
-    
-    if reading['name'] in locations:
-        config=locations[reading['name']]
+
+    SENSORS=load_config()
+
+    if reading['name'] in SENSORS:
+        config=SENSORS[reading['name']]
     else:
-        return    
-    
+        return
+
     p=SmartPlug(config['plug'])
     await p.update()
-    
+
+    if str(config['service'])==str("overnight") and is_daytime() and p.is_off:
+        return
+
+    if str(config['service'])==str("overnight") and is_daytime() and p.is_on:
+        print(f"panel on during the day; turning it off")
+        await p.turn_off()
+        return
+
     if p.is_off and float(reading['temp']) < float(config['temp']) - float(ACCEPTABLE_DRIFT) :
         print(f"temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
         await p.turn_on()
@@ -84,7 +104,6 @@ def on_advertisement(advertisement):
 
 
 adapter = get_provider().get_adapter()
-
 observer = Observer(adapter)
 observer.on_advertising_data = on_advertisement
 
