@@ -1,0 +1,4 @@
+{
+    "GVH5075_E666": {"name": "bedroom1 sensor", "location": "bedroom1", "temp": 18.5, "plug": "192.168.2.46", "service": "overnight"},
+    "GVH5075_570E": {"name": "bedroom2 sensor", "location": "bedroom2", "temp": 18.5, "plug": "192.168.2.40", "service": "overnight"}
+}
