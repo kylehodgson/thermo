@@ -20,6 +20,10 @@ async def getConfig():
 async def getConfigFor(code: str):
     return sensor.getSensorConfig()[code]
 
+@app.get("/config/{code}/temperature")
+async def getTemperatureFor(code: str):
+    return sensor.getSensorConfig()[code]['temp']
+
 @app.post("/config/")
 async def setConfig(p: TemperatureSetting):
     return sensor.setSensorTemp(p.code, p.temperature)
