@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-
 import time
 import os
 import sys
 import asyncio
 import json
+import datetime
 
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, set_level, ERROR, DEBUG
@@ -37,7 +37,6 @@ def load_config():
     return config
 
 def is_daytime():
-    import datetime
     now = datetime.datetime.now()
     if now.hour > 8 and now.hour < 22:
         return True
@@ -64,21 +63,23 @@ async def process_thermo(reading):
 
     p=SmartPlug(config['plug'])
     await p.update()
+    logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if str(config['service'])==str("overnight") and is_daytime() and p.is_off:
         return
 
     if str(config['service'])==str("overnight") and is_daytime() and p.is_on:
-        print(f"panel on during the day; turning it off")
+        print(f"[{logtime}] panel in room {config['location']} on during the day; turning it off")
         await p.turn_off()
         return
 
+    logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if p.is_off and float(reading['temp']) < float(config['temp']) - float(ACCEPTABLE_DRIFT) :
-        print(f"temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
+        print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
         await p.turn_on()
 
     if p.is_on and float(reading['temp']) > float(config['temp']) + float(ACCEPTABLE_DRIFT) :
-        print(f"temp {reading['temp']} in room {config['location']} is unacceptably warm, turning off panel")
+        print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably warm, turning off panel")
         await p.turn_off()
     
     last_reading=this_reading
