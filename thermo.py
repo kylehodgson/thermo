@@ -73,7 +73,6 @@ async def process_thermo(reading):
         await p.turn_off()
         return
 
-    logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if p.is_off and float(reading['temp']) < float(config['temp']) - float(ACCEPTABLE_DRIFT) :
         print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
         await p.turn_on()
