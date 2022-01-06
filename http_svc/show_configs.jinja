@@ -4,10 +4,35 @@
 	<form>
 		<input type="hidden" id="i_code" name="code" value="{{sensor}}">
 		<div class="input-group">
-			<input class="form-control-lg" type="text" id="i_temperature" size="4" name="temperature" value="{{config[sensor]['temp']}}">
+			<input class="form-control-lg" type="text" id="temperature-{{sensor}}" size="4" name="temperature" value="{{config[sensor]['temp']}}">
 			<span class="input-group-text">° C</span>
-			<button type="button" class="btn btn-primary btn-lg" hx-post="http://192.168.2.21:8888/config-hx/" hx-target="#i_temperature" hx-swap="outerHTML">Save</button>
+			<button type="button" class="btn btn-primary btn-lg" hx-post="http://192.168.2.21:8888/config-hx/" hx-target="#temperature-{{sensor}}" hx-swap="outerHTML">Save</button>
 		</div>
+		<div class="form-check form-switch">
+			<input class="form-check-input" type="checkbox" role="switch" id="power" {% if config[sensor].service!="off" %} checked {% endif %}>
+			<label class="form-check-label" for="power">Power</label>
+		</div> <!-- /power switch -->
+
+		{% if config[sensor].service=="overnight" %}
+		<div class="form-check">
+			<input class="form-check-input" type="radio" id="servicetype" checked >
+			<label class="form-check-label" for="servicetype">Night service only</label>
+		</div>
+		<div class="form-check">
+			<input class="form-check-input" type="radio" id="servicetype" >
+			<label class="form-check-label" for="servicetype">All day service</label>
+		</div>
+		{% else %}
+		<div class="form-check">
+			<input class="form-check-input" type="radio" id="servicetype" >
+			<label class="form-check-label" for="servicetype">Night service only</label>
+		</div>
+		<div class="form-check">
+			<input class="form-check-input" type="radio" id="servicetype" checked >
+			<label class="form-check-label" for="servicetype">All day service</label>
+		</div>
+		{% endif %}
+
 	</form>
 </div>
 {% endfor %}

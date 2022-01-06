@@ -9,10 +9,10 @@ def getSensorConfigFile(path: str):
     with open(path, 'r') as f:
         return json.load(f)
 
-def setSensorTemp(code: str, temp: float):
-    return setSensorTempFile(CONFIG_FILE, code, temp)
+def setSensorTemp(code: str, temp: float, service: str):
+    return setSensorTempFile(CONFIG_FILE, code, temp, service)
 
-def setSensorTempFile(path: str, code: str, temp: float):
+def setSensorTempFile(path: str, code: str, temp: float, service: str):
     with open(path, 'r') as f:
         config=json.load(f)
         
