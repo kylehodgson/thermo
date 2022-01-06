@@ -3,3 +3,5 @@ bleson
 fastapi
 uvicorn
 pydantic
+Jinja2
+python-multipart

@@ -1,0 +1,13 @@
+{% for sensor in config.keys() %}
+<div class="container w-75 p-3">
+	<h1 class="display-3">{{config[sensor]['location']}}</h1>
+	<form>
+		<input type="hidden" id="i_code" name="code" value="{{sensor}}">
+		<div class="input-group">
+			<input class="form-control-lg" type="text" id="i_temperature" size="4" name="temperature" value="{{config[sensor]['temp']}}">
+			<span class="input-group-text">° C</span>
+			<button type="button" class="btn btn-primary btn-lg" hx-post="http://192.168.2.21:8888/config-hx/" hx-target="#i_temperature" hx-swap="outerHTML">Save</button>
+		</div>
+	</form>
+</div>
+{% endfor %}
