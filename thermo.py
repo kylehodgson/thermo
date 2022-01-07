@@ -37,7 +37,7 @@ def load_config():
         return
     return config
 
-def is_daytime():
+def schedule_off():
     now = datetime.datetime.now()
     if now.hour > 8 and now.hour < 22:
         return True
@@ -49,8 +49,8 @@ def update_room_state(reading):
 def update_room_state_file(reading):
     import os.path
     from pathlib import Path
-
-    filename="thermo-state-" + reading['name'] + ".json"
+    DIR="data/"
+    filename=DIR + "thermo-state-" + reading['name'] + ".json"
 
     if os.path.isfile(filename)==False:
         Path(filename).touch()
@@ -66,27 +66,26 @@ def update_room_state_file(reading):
         return
     
     if reading['temp']!=last['temp']:
-        print(f"reading temp {reading['temp']} did not match last temp {last['temp']} updating cache file...")
         with open(filename, 'w') as f:
             json.dump(reading, f)
     return
 
 last_reading=int(time.time()) - (CHECK_INTERVAL * 2)
 async def process_thermo(reading):
-    global last_reading
-
+    #update room state with this reading
     update_room_state(reading)
-
+    
+    # see if enough time has elapsed since last reading so that we dont just run all the time 
+    global last_reading
     this_reading=int(time.time())
     elapsed=this_reading - last_reading
-
-    #print(f"Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
-
     if elapsed < CHECK_INTERVAL:
         return
 
+    logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #print(f"[{logtime}] Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
+    
     SENSORS=load_config()
-
     if reading['name'] in SENSORS:
         config=SENSORS[reading['name']]
     else:
@@ -94,37 +93,36 @@ async def process_thermo(reading):
 
     try:
         p=SmartPlug(config['plug'])
+        await p.update()
     except:
         print(f"trouble connecting to plug config['plug'], cowardly refusing to continue")
         return False
 
-    await p.update()
-    logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    # if the sensor is configured to be turned off, make sure it is off
     if str(config['service'])==str("off") and p.is_on:
+        return
+    if str(config['service'])==str("off") and p.is_off:
         print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
         await p.turn_off()
         return
 
-    if str(config['service'])==str("off") and p.is_off:
+    # if the sensors schedule indicates the panel should be turned off, make sure it is off
+    if str(config['service'])==str("scheduled") and schedule_off() and p.is_off:
         return
-
-    if str(config['service'])==str("overnight") and is_daytime() and p.is_off:
-        return
-
-    if str(config['service'])==str("overnight") and is_daytime() and p.is_on:
-        print(f"[{logtime}] panel in room {config['location']} on during the day; turning it off")
+    if str(config['service'])==str("scheduled") and schedule_off() and p.is_on:
+        print(f"[{logtime}] panel in room {config['location']} on off schedule; turning it off")
         await p.turn_off()
         return
 
+    # sensor enabled, check if temperature is in range
     if p.is_off and float(reading['temp']) < float(config['temp']) - float(ACCEPTABLE_DRIFT) :
         print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
         await p.turn_on()
-
     if p.is_on and float(reading['temp']) > float(config['temp']) + float(ACCEPTABLE_DRIFT) :
         print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably warm, turning off panel")
         await p.turn_off()
-    
+   
+    # update reading time
     last_reading=this_reading
 
 def reading_from_advertisement(advertisement):
@@ -142,9 +140,6 @@ def on_advertisement(advertisement):
         if H5075_UPDATE_UUID16 in advertisement.uuid16s:
             reading = reading_from_advertisement(advertisement)
             asyncio.run(process_thermo(reading))
-
-
-# ###########################################################################
 
 
 adapter = get_provider().get_adapter()

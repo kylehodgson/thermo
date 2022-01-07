@@ -55,3 +55,9 @@ async def setConfig(code: str = Form("code"), temperature: str = Form("temperatu
 async def getConditions(code: str):
     return TempReading.getTemperatureReading(code)
 
+@app.get("/conditions-hx/{code}", response_class=HTMLResponse)
+async def getConditionsFor(code: str):
+    result = TempReading.getTemperatureReading(code)
+    with open('show_conditions.jinja') as f:
+        template = Template(f.read())
+    return template.render(conditions=result, sensor=code)
