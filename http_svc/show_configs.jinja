@@ -1,7 +1,7 @@
 <div class="container w-75 p-3" id="showall">
 {% for sensor in config.keys() %}
 	<div >	
-	<h1 class="display-3">{{config[sensor]['location']}}</h1>
+		<h1 class="display-3">{{config[sensor]['location']}}: <span hx-trigger="load" hx-get="http://192.168.2.21:8888/conditions/{{sensor}}" hx-target="#current_temp_{{sensor}}" hx-swap="outerHTML" id="current_temp_{{sensor}}"></span>&deg;</h1>
 	<form>
 		<input type="hidden" id="i_code" name="code" value="{{sensor}}">
 		<div class="input-group">
