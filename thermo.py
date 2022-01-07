@@ -95,7 +95,7 @@ async def process_thermo(reading):
         p=SmartPlug(config['plug'])
         await p.update()
     except:
-        print(f"trouble connecting to plug config['plug'], cowardly refusing to continue")
+        print(f"[{logtime}] trouble connecting to plug {config['plug']} in {config['location']}")
         return False
 
     # if the sensor is configured to be turned off, make sure it is off
