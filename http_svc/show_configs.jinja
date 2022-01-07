@@ -1,7 +1,7 @@
 <div class="container w-75 p-3" id="showall">
 {% for sensor in config.keys() %}
 	<div >	
-		<h1 class="display-3">{{config[sensor]['location']}}: <span hx-trigger="load" hx-get="http://192.168.2.21:8888/conditions/{{sensor}}" hx-target="#current_temp_{{sensor}}" hx-swap="outerHTML" id="current_temp_{{sensor}}"></span>&deg;</h1>
+		<h1 class="display-3">{{config[sensor]['location']}}: <span hx-trigger="load" hx-get="http://192.168.2.21:8888/conditions-hx/{{sensor}}" hx-target="#current_temp_{{sensor}}"  id="current_temp_{{sensor}}"></span></h1>
 	<form>
 		<input type="hidden" id="i_code" name="code" value="{{sensor}}">
 		<div class="input-group">
@@ -10,10 +10,10 @@
 			<button type="button" class="btn btn-primary btn-lg" hx-post="http://192.168.2.21:8888/config-hx/" hx-target="#showall" hx-swap="outerHTML">Save</button>
 		</div>
 
-		{% if config[sensor].service=="overnight" %}
+		{% if config[sensor].service=="scheduled" %}
 			<div class="form-check">
-				<input class="form-check-input" type="radio" id="servicetype-overnight" name="service" value="overnight" checked>
-				<label class="form-check-label" for="servicetype-overnight">Follow schedule</label>
+				<input class="form-check-input" type="radio" id="servicetype-scheduled" name="service" value="scheduled" checked>
+				<label class="form-check-label" for="servicetype-scheduled">Follow schedule</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-on" name="service" value="on">
@@ -25,8 +25,8 @@
 			</div>
 		{% elif config[sensor].service=="on"  %}
 			<div class="form-check">
-				<input class="form-check-input" type="radio" id="servicetype-overnight" name="service" value="overnight">
-				<label class="form-check-label" for="servicetype-overnight">Follow schedule</label>
+				<input class="form-check-input" type="radio" id="servicetype-scheduled" name="service" value="scheduled">
+				<label class="form-check-label" for="servicetype-scheduled">Follow schedule</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-on" name="service" value="on" checked>
@@ -38,8 +38,8 @@
 			</div>
 		{% else %}
 			<div class="form-check">
-				<input class="form-check-input" type="radio" id="servicetype-overnight" name="service" value="overnight">
-				<label class="form-check-label" for="servicetype-overnight">Follow schedule</label>
+				<input class="form-check-input" type="radio" id="servicetype-scheduled" name="service" value="scheduled">
+				<label class="form-check-label" for="servicetype-scheduled">Follow schedule</label>
 		         </div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-on" name="service" value="on">

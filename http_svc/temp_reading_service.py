@@ -1,6 +1,6 @@
 import json
 
-READING_DIR='/home/pi/projects/thermo/'
+READING_DIR='/home/pi/projects/thermo/data/'
 
 def getTemperatureReading(sensor: str):
     if not sensor:
