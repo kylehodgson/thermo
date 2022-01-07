@@ -13,11 +13,11 @@
 		{% if config[sensor].service=="overnight" %}
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-overnight" name="service" value="overnight" checked>
-				<label class="form-check-label" for="servicetype-overnight">Night service only</label>
+				<label class="form-check-label" for="servicetype-overnight">Follow schedule</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-on" name="service" value="on">
-				<label class="form-check-label" for="servicetype-on">All day service</label>
+				<label class="form-check-label" for="servicetype-on">On</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-off" name="service" value="off">
@@ -26,11 +26,11 @@
 		{% elif config[sensor].service=="on"  %}
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-overnight" name="service" value="overnight">
-				<label class="form-check-label" for="servicetype-overnight">Night service only</label>
+				<label class="form-check-label" for="servicetype-overnight">Follow schedule</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-on" name="service" value="on" checked>
-				<label class="form-check-label" for="servicetype-on">All day service</label>
+				<label class="form-check-label" for="servicetype-on">On</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-off" name="service" value="off">
@@ -39,11 +39,11 @@
 		{% else %}
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-overnight" name="service" value="overnight">
-				<label class="form-check-label" for="servicetype-overnight">Night service only</label>
+				<label class="form-check-label" for="servicetype-overnight">Follow schedule</label>
 		         </div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-on" name="service" value="on">
-				 <label class="form-check-label" for="servicetype-on">All day service</label>
+				 <label class="form-check-label" for="servicetype-on">On</label>
 			</div>
 			<div class="form-check">
 				<input class="form-check-input" type="radio" id="servicetype-off" name="service" value="off" checked>
