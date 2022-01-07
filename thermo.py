@@ -34,6 +34,7 @@ def load_config():
         f.close()
     except OSError:
         print("Could not read from config.json in load_config")
+        return
     return config
 
 def is_daytime():
@@ -42,9 +43,39 @@ def is_daytime():
         return True
     return False
 
+def update_room_state(reading):
+    return update_room_state_file(reading)
+
+def update_room_state_file(reading):
+    import os.path
+    from pathlib import Path
+
+    filename="thermo-state-" + reading['name'] + ".json"
+
+    if os.path.isfile(filename)==False:
+        Path(filename).touch()
+        with open(filename, 'w') as f:
+            json.dump(reading, f)
+
+    try:
+        f = open(filename) 
+        last=json.load(f)
+        f.close()
+    except OSError:
+        print(f"Error opening existing file {filename} ..")
+        return
+    
+    if reading['temp']!=last['temp']:
+        print(f"reading temp {reading['temp']} did not match last temp {last['temp']} updating cache file...")
+        with open(filename, 'w') as f:
+            json.dump(reading, f)
+    return
+
 last_reading=int(time.time()) - (CHECK_INTERVAL * 2)
 async def process_thermo(reading):
     global last_reading
+
+    update_room_state(reading)
 
     this_reading=int(time.time())
     elapsed=this_reading - last_reading
@@ -61,13 +92,21 @@ async def process_thermo(reading):
     else:
         return
 
-    p=SmartPlug(config['plug'])
+    try:
+        p=SmartPlug(config['plug'])
+    except:
+        print(f"trouble connecting to plug config['plug'], cowardly refusing to continue")
+        return False
+
     await p.update()
     logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if str(config['service'])==str("off") and p.is_on:
         print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
         await p.turn_off()
+        return
+
+    if str(config['service'])==str("off") and p.is_off:
         return
 
     if str(config['service'])==str("overnight") and is_daytime() and p.is_off:
