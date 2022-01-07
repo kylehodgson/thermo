@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from models import TemperatureSetting
 from jinja2 import Template
-import sensor_service as sensor
+import room_config_service as Room
+import temp_reading_service as TempReading
 
 app = FastAPI()
 origins=["http://192.168.2.21"]
@@ -15,38 +16,42 @@ async def root():
 
 @app.get("/config/")
 async def getConfig():
-    return sensor.getSensorConfig()
+    return Room.getSensorConfig()
 
 @app.get("/config-hx/", response_class=HTMLResponse)
 async def getConfig():
     with open('show_configs.jinja') as f:
         template = Template(f.read())
-    return template.render(config=sensor.getSensorConfig())
+    return template.render(config=Room.getSensorConfig())
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
-    return sensor.getSensorConfig()[code]
+    return Room.getSensorConfig()[code]
 
 @app.get("/config/{code}/temperature")
 async def getTemperatureFor(code: str):
-    return sensor.getSensorConfig()[code]['temp']
+    return Room.getSensorConfig()[code]['temp']
 
 @app.get("/config-hx/{code}/temperature", response_class=HTMLResponse)
 async def getTemperatureFor(code: str):
-    temp = sensor.getSensorConfig()[code]['temp']
+    temp = Room.getSensorConfig()[code]['temp']
     with open('temperature_input.jinja') as f:
             template = Template(f.read())
     return template.render(temperature=temp, sensor=code)
 
 @app.post("/config/")
 async def setConfig(p: TemperatureSetting):
-    return sensor.setSensorTemp(p.code, p.temperature)
+    return Room.setSensorTemp(p.code, p.temperature)
 
 @app.post("/config-hx/", response_class=HTMLResponse)
 async def setConfig(code: str = Form("code"), temperature: str = Form("temperature"), service: str = Form("service")):
-    result = sensor.setSensorTemp(code, temperature, service)
-    config = sensor.getSensorConfig()
+    result = Room.setSensorTemp(code, temperature, service)
+    config = Room.getSensorConfig()
     with open('show_configs.jinja') as f:
         template = Template(f.read())
     return template.render(config=config)
+
+@app.get("/conditions/{code}")
+async def getConditions(code: str):
+    return TempReading.getTemperatureReading(code)
 
