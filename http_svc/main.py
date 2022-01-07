@@ -43,9 +43,10 @@ async def setConfig(p: TemperatureSetting):
     return sensor.setSensorTemp(p.code, p.temperature)
 
 @app.post("/config-hx/", response_class=HTMLResponse)
-async def setConfig(code: str = Form("code"), temperature: str = Form("temperature"), service: str = Form("servicetype")):
+async def setConfig(code: str = Form("code"), temperature: str = Form("temperature"), service: str = Form("service")):
     result = sensor.setSensorTemp(code, temperature, service)
-    with open('temperature_input.jinja') as f:
+    config = sensor.getSensorConfig()
+    with open('show_configs.jinja') as f:
         template = Template(f.read())
-    return template.render(temperature=result['temp'])
+    return template.render(config=config)
 
