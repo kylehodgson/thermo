@@ -65,6 +65,11 @@ async def process_thermo(reading):
     await p.update()
     logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    if str(config['service'])==str("off") and p.is_on:
+        print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
+        await p.turn_off()
+        return
+
     if str(config['service'])==str("overnight") and is_daytime() and p.is_off:
         return
 

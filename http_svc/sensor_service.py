@@ -17,6 +17,7 @@ def setSensorTempFile(path: str, code: str, temp: float, service: str):
         config=json.load(f)
         
     config[code]['temp']=temp
+    config[code]['service']=service
 
     with open(path, 'w') as f:
         json.dump(config, f)
