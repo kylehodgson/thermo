@@ -99,9 +99,9 @@ async def process_thermo(reading):
         return False
 
     # if the sensor is configured to be turned off, make sure it is off
-    if str(config['service'])==str("off") and p.is_on:
-        return
     if str(config['service'])==str("off") and p.is_off:
+        return
+    if str(config['service'])==str("off") and p.is_on:
         print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
         await p.turn_off()
         return
