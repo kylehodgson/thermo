@@ -1,9 +1,9 @@
 import json
-
+import config_file_service as configsvc
 CONFIG_FILE='/home/pi/projects/thermo/config.json'
 
 def getSensorConfig():
-    return getSensorConfigFile(CONFIG_FILE)
+    return configsvc.load_config()
 
 def getSensorConfigFile(path: str):
     with open(path, 'r') as f:

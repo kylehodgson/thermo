@@ -5,6 +5,7 @@ import sys
 import asyncio
 import json
 import datetime
+import config_file_service as configsvc
 
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, set_level, ERROR, DEBUG
@@ -26,16 +27,6 @@ H5075_UPDATE_UUID16 = UUID16(0xEC88)
 CHECK_INTERVAL = int(5)
 DEFAULT_TEMP = float(20)
 ACCEPTABLE_DRIFT = float(1)
-
-def load_config():
-    try:
-        f = open('config.json')
-        config=json.load(f)
-        f.close()
-    except OSError:
-        print("Could not read from config.json in load_config")
-        return
-    return config
 
 def schedule_off():
     now = datetime.datetime.now()
@@ -85,7 +76,7 @@ async def process_thermo(reading):
     logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     #print(f"[{logtime}] Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
     
-    SENSORS=load_config()
+    SENSORS=configsvc.load_config()
     if reading['name'] in SENSORS:
         config=SENSORS[reading['name']]
     else:
