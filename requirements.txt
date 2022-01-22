@@ -5,3 +5,4 @@ uvicorn
 pydantic
 Jinja2
 python-multipart
+ansimarkup
