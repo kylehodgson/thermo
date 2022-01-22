@@ -1,0 +1,3 @@
+[submodule "zonemgr/thirdparty/gridpy"]
+	path = zonemgr/thirdparty/gridpy
+	url = https://github.com/c3e/gridpy.git
