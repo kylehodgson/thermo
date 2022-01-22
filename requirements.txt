@@ -6,3 +6,4 @@ pydantic
 Jinja2
 python-multipart
 ansimarkup
+smbus2
