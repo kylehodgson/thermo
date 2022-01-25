@@ -7,3 +7,4 @@ Jinja2
 python-multipart
 ansimarkup
 smbus2
+requests
