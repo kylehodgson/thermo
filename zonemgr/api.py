@@ -1,57 +1,57 @@
-#from urllib.request import Request
 from fastapi import FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from jinja2 import Template
 from fastapi.templating import Jinja2Templates
 from zonemgr.models import TemperatureSetting
-import zonemgr.room_config_service as Room
-import zonemgr.temp_reading_service as TempReading
+import zonemgr.services.temp_reading_service as TempReading
+from zonemgr.services.config_db_service import ConfigService
+from zonemgr.db import ZoneManagerDB
 
-app = FastAPI()
-origins=["http://192.168.2.21"]
-app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
+# poor dev's dependency injection
+zmdb=ZoneManagerDB()
+configsvc = ConfigService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
+app = FastAPI(root_path="/thermo/api/v1")
+origins=["http://192.168.2.36"]
+app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
-@app.get("/")
+@app.on_event("shutdown")
+def shutdown_event():
+    zmdb.shutDown()
+
+@app.get("/thermo/", response_class=HTMLResponse)
 async def root():
-    return {"message": "Jello Furled"}
+    return templates.TemplateResponse("index.html", {"request": {}})
 
 @app.get("/config/")
 async def getConfig():
-    return Room.getSensorConfig()
-
-@app.get("/config-hx/", response_class=HTMLResponse)
-async def getConfig(request: Request):
-    return templates.TemplateResponse("configs.jinja", {"request": request, "config": Room.getSensorConfig()})
+    return configsvc.load_config()
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
-    return Room.getSensorConfig()[code]
+    return configsvc.load_config()
 
 @app.get("/config/{code}/temperature")
 async def getTemperatureFor(code: str):
-    return Room.getSensorConfig()[code]['temp']
-
-@app.get("/config-hx/{code}/temperature", response_class=HTMLResponse)
-async def getTemperatureFor(request: Request, code: str):
-    temp = Room.getSensorConfig()[code]['temp']
-    return templates.TemplateResponse("conditions.jinja", {"request": Request, "sensor": code, "temperature": temp})
+    return configsvc.load_config()
 
 @app.post("/config/")
 async def setConfig(p: TemperatureSetting):
-    return Room.setSensorTemp(p.code, p.temperature)
-
-@app.post("/config-hx/", response_class=HTMLResponse)
-async def setConfig(request: Request, code: str = Form("code"), temperature: str = Form("temperature"), service: str = Form("service")):
-    result = Room.setSensorTemp(code, temperature, service)
-    config = Room.getSensorConfig()
-    return templates.TemplateResponse("configs.jinja", {"request": request, "config": config})
+    return configsvc.set_sensor_config(p.code, p.temperature)
 
 @app.get("/conditions/{code}")
 async def getConditions(code: str):
     return TempReading.getTemperatureReading(code)
+
+@app.get("/config-hx/", response_class=HTMLResponse)
+async def getConfig(request: Request):
+    return templates.TemplateResponse("configs.jinja", {"request": request, "config": configsvc.load_config()})
+
+@app.post("/config-hx/", response_class=HTMLResponse)
+async def setConfig(request: Request, code: str = Form("code"), temperature: str = Form("temperature"), service: str = Form("service")):
+    config = configsvc.set_sensor_config(code, temperature, service) 
+    return templates.TemplateResponse("configs.jinja", {"request": request, "config": config})
 
 @app.get("/conditions-hx/{code}", response_class=HTMLResponse)
 async def getConditionsFor(request: Request, code: str):
