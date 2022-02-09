@@ -5,7 +5,7 @@ import sys
 import asyncio
 import json
 import datetime
-import config_file_service as configsvc
+import zonemgr.services.config_file_service as configsvc
 
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, set_level, ERROR, DEBUG
@@ -132,10 +132,13 @@ def on_advertisement(advertisement):
             reading = reading_from_advertisement(advertisement)
             asyncio.run(process_thermo(reading))
 
-
-adapter = get_provider().get_adapter()
-observer = Observer(adapter)
-observer.on_advertising_data = on_advertisement
+try:
+    adapter = get_provider().get_adapter()
+    observer = Observer(adapter)
+    observer.on_advertising_data = on_advertisement
+except Exception as e:
+    print(f"Error getting ble adaptor {e}")
+    raise
 
 try:
     while True:
