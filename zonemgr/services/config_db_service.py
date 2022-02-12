@@ -10,7 +10,7 @@ class ConfigService:
         self.zmdb=zmdb
 
     def save(self,sc):
-        id,sc_record=self.get_sensor_config(sc.sensor)
+        id,sc_record=self.get_sensor_config(sc.sensor_id)
 
         with self.zmdb as conn: # reading values from environment
             with conn.cursor() as cursor:
