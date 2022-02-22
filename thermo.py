@@ -8,7 +8,7 @@ import datetime
 import zonemgr.services.config_file_service as configsvc
 
 from bleson import get_provider, Observer, UUID16
-from bleson.logger import log, set_level, ERROR, DEBUG
+from bleson.logger import log, set_level, ERROR, DEBUG, INFO
 from kasa import SmartPlug
 
 # Disable warnings

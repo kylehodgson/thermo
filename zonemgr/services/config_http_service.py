@@ -7,6 +7,8 @@ def load_config():
         response = requests.get(SERVER + "/config")
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        print("Got unexpected http status for " + SERVER + " in config_http_service.load_config() error: " + e)
+        print(f"Got unexpected http status for {SERVER} in config_http_service.load_config(): {e} ")
+    except Exception as e:
+        print(f"Could not read from server {SERVER} in config_http_service.load_config(): {e}")
         return
     return response.json()
