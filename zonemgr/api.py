@@ -5,6 +5,7 @@ from zonemgr.models import TemperatureSetting
 from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.services.config_db_service import ConfigService
 from zonemgr.db import ZoneManagerDB
+from discover import discover
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()
@@ -28,9 +29,8 @@ async def getConfig():
 
 @app.get("/discover/")
 async def getDiscover():
-    from discover import discover
     from fastapi.encoders import jsonable_encoder
-    found = await discover.discover()
+    found = await discover.discover_all()
     return jsonable_encoder(found)
 
 @app.get("/config/{code}")
