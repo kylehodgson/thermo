@@ -3,13 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from zonemgr.models import TemperatureSetting
-import zonemgr.services.temp_reading_service as TempReading
+from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.services.config_db_service import ConfigService
 from zonemgr.db import ZoneManagerDB
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()
 configsvc = ConfigService(zmdb)
+tempsvc=TempReadingService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
 app = FastAPI(root_path="/thermo/api/v1")
@@ -42,7 +43,7 @@ async def setConfig(p: TemperatureSetting):
 
 @app.get("/conditions/{code}")
 async def getConditions(code: str):
-    return TempReading.getTemperatureReading(code)
+    return tempsvc.getTemperatureReading(code)
 
 @app.get("/config-hx/", response_class=HTMLResponse)
 async def getConfig(request: Request):
@@ -55,5 +56,5 @@ async def setConfig(request: Request, code: str = Form("code"), temperature: str
 
 @app.get("/conditions-hx/{code}", response_class=HTMLResponse)
 async def getConditionsFor(request: Request, code: str):
-    result = TempReading.getTemperatureReading(code)
+    result = tempsvc.getTemperatureReading(code)
     return templates.TemplateResponse("conditions.jinja", {"request": request, "conditions": result, "sensor": code})
