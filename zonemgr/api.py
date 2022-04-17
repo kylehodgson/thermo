@@ -33,7 +33,9 @@ async def getDiscover():
     from discover import goveesensors, kasaplugs
     found = await asyncio.gather(
         goveesensors.discover(), 
-        kasaplugs.discover())
+        kasaplugs.discover(),
+    )
+    print(f"found {found}")
     return jsonable_encoder(found)
 
 @app.get("/config/{code}")
