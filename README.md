@@ -7,25 +7,6 @@ or other inexpensive, safe, electrical heating devices.
 
 ## Using bash and Raspian...
 
-This assumes you will put the code in `/home/pi/projects`, which we will refer to as `~/projects`.
-### Install `asdf` and Python
-```bash
-git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-echo '. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
-. ~/.bashrc
-asdf plugin-add python
-cd ~/projects/thermo
-asdf install
-```
-### Verify the version of python
-Version should match what is in .tool-versions at this stage -don't continue until they match
-```bash
-which python3
-python3 --version
-cat ~/projects/thermo/.tool-versions
-```
-
 ### Source `venv` environment and install dependencies
 ```bash
 cd ~/projects/thermo
@@ -36,12 +17,12 @@ pip install -r requirements.txt
 
 ### Install and setup postgres environment
 ```bash
-sudo apt install postgresql postgresql-contrib libpqdev
+sudo apt install postgresql postgresql-contrib libpq-dev
 sudo systemctl start postgresql
 sudo -u postgres createdb thermo
 sudo -u postgres createuser zonemgr
-sudo -u postgres psql thermo -f db/migration-0001.sql 
-cat example.env > ~/projects/thermo/.env
+sudo -u postgres psql thermo -f db/migration-0001.sql
+cat ~/projects/thermo/example.env > ~/projects/thermo/.env
 . .env
 ```
 
@@ -82,4 +63,4 @@ A `zone` is a room that you'd like to control. This application works by setting
 
 ## Zone Manager
 
-The Zone Manager is a small http service that 
+The Zone Manager is a small http service that provides the thermostat UI. It relies on services to read and write configuration, and also read and write current conditions. 

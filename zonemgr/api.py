@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Form, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from zonemgr.models import TemperatureSetting
@@ -28,9 +27,10 @@ async def root():
 async def getConfig():
     return configsvc.load_config()
 
-@app.get("/discover/", response_class=HTMLResponse)
+@app.get("/discover/")
 async def getDiscover():
-    return sensors.discover()
+    from fastapi.encoders import jsonable_encoder
+    return jsonable_encoder(sensors.discover())
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
