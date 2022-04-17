@@ -5,7 +5,6 @@ from zonemgr.models import TemperatureSetting
 from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.services.config_db_service import ConfigService
 from zonemgr.db import ZoneManagerDB
-from discover import goveesensors as sensors
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()
@@ -30,7 +29,12 @@ async def getConfig():
 @app.get("/discover/")
 async def getDiscover():
     from fastapi.encoders import jsonable_encoder
-    return jsonable_encoder(sensors.discover())
+    import asyncio
+    from discover import goveesensors, kasaplugs
+    found = await asyncio.gather(
+        goveesensors.discover(), 
+        kasaplugs.discover())
+    return jsonable_encoder(found)
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
