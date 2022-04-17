@@ -31,8 +31,8 @@ async def getDiscover():
     from fastapi.encoders import jsonable_encoder
     from discover import goveesensors, kasaplugs
     found = []
-    found[0]=goveesensors.discover()
-    found[1]=kasaplugs.discover()
+    found.append(goveesensors.discover())
+    found.append(kasaplugs.discover())
     print(f"found {found}")
     return jsonable_encoder(found)
 
