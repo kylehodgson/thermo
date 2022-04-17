@@ -1,4 +1,5 @@
 ALTER USER zonemgr WITH PASSWORD 'P@ssw0rd1';
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO zonemgr;
 CREATE TABLE IF NOT EXISTS public.sensor_configurations (
     id      serial primary key, 
     config  jsonb
