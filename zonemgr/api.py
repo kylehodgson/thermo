@@ -13,15 +13,14 @@ configsvc = ConfigService(zmdb)
 tempsvc=TempReadingService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
-app = FastAPI(root_path="/thermo/api/v1")
-origins=["http://192.168.2.36"]
-app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
+app = FastAPI()
+#app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
 @app.on_event("shutdown")
 def shutdown_event():
     zmdb.shutDown()
 
-@app.get("/thermo/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def root():
     return templates.TemplateResponse("index.html", {"request": {}})
 
