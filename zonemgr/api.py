@@ -6,6 +6,7 @@ from zonemgr.models import TemperatureSetting
 from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.services.config_db_service import ConfigService
 from zonemgr.db import ZoneManagerDB
+from discover import goveesensors as sensors
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()
@@ -14,7 +15,6 @@ tempsvc=TempReadingService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
 app = FastAPI()
-#app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
 @app.on_event("shutdown")
 def shutdown_event():
@@ -27,6 +27,10 @@ async def root():
 @app.get("/config/")
 async def getConfig():
     return configsvc.load_config()
+
+@app.get("/discover/", response_class=HTMLResponse)
+async def getDiscover():
+    return sensors.discover()
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
