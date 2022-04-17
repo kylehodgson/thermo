@@ -28,12 +28,9 @@ async def getConfig():
 
 @app.get("/discover/")
 async def getDiscover():
+    from discover import discover
     from fastapi.encoders import jsonable_encoder
-    from discover import goveesensors, kasaplugs
-    found = []
-    found.append(goveesensors.discover())
-    found.append(kasaplugs.discover())
-    print(f"found {found}")
+    found = await discover.discover()
     return jsonable_encoder(found)
 
 @app.get("/config/{code}")
