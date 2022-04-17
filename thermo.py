@@ -4,7 +4,7 @@ import os
 import sys
 import asyncio
 import datetime
-import zonemgr.services.config_file_service as configsvc
+import zonemgr.services.config_db_service as configsvc
 import zonemgr.services.temp_reading_db_service as tempsvc
 from zonemgr.db import ZoneManagerDB
 import bleson
