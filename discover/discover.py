@@ -1,6 +1,6 @@
 import asyncio
-import kasaplugs
-import goveesensors
+from . import kasaplugs
+from . import goveesensors
 
 async def discover_all():
     found=[]
