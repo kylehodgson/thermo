@@ -3,9 +3,11 @@ from . import kasaplugs
 from . import goveesensors
 
 async def discover_all():
-    found=[]
-    found.append(await kasaplugs.discover())
-    found.append(goveesensors.discover())
+    plugs = await kasaplugs.discover()
+    sensors = goveesensors.discover()
+    found = {}
+    found['plugs']=plugs
+    found['sensors']=sensors
     return found
 
 if __name__ == '__main__':

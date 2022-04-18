@@ -27,11 +27,14 @@ async def root():
 async def getConfig():
     return configsvc.load_config()
 
-@app.get("/discover/")
-async def getDiscover():
-    from fastapi.encoders import jsonable_encoder
+@app.get("/discover",response_class=HTMLResponse)
+async def getDiscoverUI():
+    return templates.TemplateResponse("discover.html", {"request": {}})
+
+@app.get("/discover-hx/",response_class=HTMLResponse)
+async def getDiscover(request: Request):
     found = await discover.discover_all()
-    return jsonable_encoder(found)
+    return templates.TemplateResponse("discover.jinja", {"request": request, "found": found})
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
@@ -62,3 +65,4 @@ async def setConfig(request: Request, code: str = Form("code"), temperature: str
 async def getConditionsFor(request: Request, code: str):
     result = tempsvc.getTemperatureReading(code)
     return templates.TemplateResponse("conditions.jinja", {"request": request, "conditions": result, "sensor": code})
+
