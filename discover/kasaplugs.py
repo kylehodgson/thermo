@@ -14,7 +14,7 @@ def plug_from_dev(dev):
         'ip_addr': dev.host
     }
 
-async def discover():
+async def discover() -> list:
     plugs=[]
     devices = await Discover.discover()
     for addr, dev in devices.items():

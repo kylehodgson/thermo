@@ -1,0 +1,27 @@
+{% for sensor in found['sensors'] %}
+    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+    <div class="card-header">Bluetooth temperature sensor</div>
+    <div class="card-body">
+        <h5 class="card-title">{{sensor['name']}}</h5>
+        <p class="card-text">
+        <dl class="row">
+            <dt class="col-sm-7">temperature</dt>
+            <dd class="col-sm-5"> {{sensor['temp']}}° C </dd>
+            <dt class="col-sm-7">humidity</dt>
+            <dd class="col-sm-5">{{sensor['humidity']}}%</dd>
+            <dt class="col-sm-7">battery</dt>
+            <dd class="col-sm-5">{{sensor['battery']}}%</dd>
+        </dl>
+        </p>
+    </div>
+    </div>
+{% endfor %}
+{% for plug in found['plugs'] %}
+    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+    <div class="card-header">Wifi smart plug</div>
+    <div class="card-body">
+        <h5 class="card-title">{{plug['name']}}</h5>
+        <p class="card-text">{{plug['ip_addr']}} </p>
+    </div>
+    </div>
+{% endfor %}
