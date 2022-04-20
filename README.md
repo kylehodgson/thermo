@@ -9,7 +9,7 @@ A jumbo epic sized user story might go something like this:
 > 
 > *I would like a system that can turn on and off electric heaters that plug in to a wall socket (usually an infrared panel) based on the temperature,*
 > 
-> *So that I can stop burning stuff to heat the whole building and only heat the rooms I want (usually a bedroom overnight),*
+> *So that I can stop burning stuff to heat the whole building and only heat the rooms I want (usually bedrooms overnight),*
 > 
 > *Until I get a heat pump.*
 
