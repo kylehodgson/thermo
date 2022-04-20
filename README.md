@@ -22,13 +22,17 @@ This project came about when I became obsessed with the possibility of infrared 
  - Three rooms in our house are "zones" for `thermo`. Two bedrooms, and one office like space.
  - The bedrooms are set to "scheduled"; which means `thermo` will keep them up to temperature between 10 PM and 8 AM
  - The office space we either enable or disable when we are using it via the web app, as its used in an ad hoc fashion
- - The nest shuts down the furnace overnight since `thermo` keeps it warm enough
- - The next morning it starts heating up the rest of the space
+ - When `thermo` kicks in and warms up the bedroom with the sensor in it, the nest shuts down the furnace (since `thermo` keeps it warm enough)
+ - The next morning the nest switches to a sensor in the main area of the home, so it starts heating up the rest of the home
  - This reliably saves us ~ 8 hours worth of gas heating every day! (now to calculate how long it will take me to get to a gigaton...)
+
+More about the hardware we're using
  - `thermo` and the `zone manager` are running on a Raspberry Pi 4 right now, though I'm working on getting it working on a Pi zero /W
+ - Wexstar 600 watt panels are totally capable of quickly warming up any room like space in a home (say a bedroom like space with walls and a door)
+ - We also use the panels in "open" areas of the house; they work more like space heaters at that point where you need to be right next to it
  - The govee thermometer / hygrometers emit BLE advertisements from rooms all over the house and the pi has no problem receiving them
  - The panels are plugged in to kasa smartplugs (which is handy as they have a nice Python API)
- - You could of course skip the nest sensors, and just schedule it to turn off when `thermo` kicks in; however, having the sensor in one of the rooms acts as a failsafe in case I forget to restart the service when I'm monkeying with it (or if the pi gets unplugged)
+ - You could skip the nest sensor bit, and just schedule the nest to switch to 'eco' mode when `thermo` kicks in; however, having the sensor in one of the rooms acts as a failsafe in case I forget to restart the service when I'm monkeying with it (or if the pi gets unplugged)
 
 # Install and Run
 
