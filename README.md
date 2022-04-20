@@ -3,6 +3,13 @@ This project seeks to automate the process of 1) listening to bluetooth thermome
 switching smart plugs off an on; particurlarly when those smart plugs are controlling infrared panel heaters
 or other inexpensive, safe, electrical heating devices.
 
+A jumbo epic sized user story might go something like this:
+
+> As a human concerned with climate change that lives in or otherwise frequents a building heated with natural gas (or oil, or anything that burns),
+> I would like a system that can turn safe space heaters (usually an infrared panel) in rooms where people are (often bedrooms),
+> So that I can turn off the heat to areas of the space not being used and avoid burning stuff,
+> Until I get a heat pump.
+
 # Install and Run
 
 ## Using bash and Raspian...
