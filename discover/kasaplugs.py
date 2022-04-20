@@ -14,15 +14,19 @@ def plug_from_dev(dev):
         'ip_addr': dev.host
     }
 
-def discover():
-    devices = asyncio.run(Discover.discover())
+async def discover() -> list:
+    plugs=[]
+    devices = await Discover.discover()
     for addr, dev in devices.items():
-        asyncio.run(dev.update())
+        await dev.update()
         if(dev.is_plug):
-            yield plug_from_dev(dev)
+            plugs.append(plug_from_dev(dev))
+    return plugs 
 
 def main() -> int:
-    for plug in discover():
+    loop = asyncio.get_event_loop()
+
+    for plug in loop.run_until_complete( discover() ):
         print(f"{plug['name']}:")
         for property in plug:
             if property!='name':
@@ -30,4 +34,4 @@ def main() -> int:
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+        sys.exit(main())

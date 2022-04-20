@@ -1,32 +1,40 @@
 from fastapi import FastAPI, Form, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from zonemgr.models import TemperatureSetting
-import zonemgr.services.temp_reading_service as TempReading
+from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.services.config_db_service import ConfigService
 from zonemgr.db import ZoneManagerDB
+from discover import discover
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()
 configsvc = ConfigService(zmdb)
+tempsvc=TempReadingService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
-app = FastAPI(root_path="/thermo/api/v1")
-origins=["http://192.168.2.36"]
-app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
+app = FastAPI()
 
 @app.on_event("shutdown")
 def shutdown_event():
     zmdb.shutDown()
 
-@app.get("/thermo/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def root():
     return templates.TemplateResponse("index.html", {"request": {}})
 
 @app.get("/config/")
 async def getConfig():
     return configsvc.load_config()
+
+@app.get("/discover",response_class=HTMLResponse)
+async def getDiscoverUI():
+    return templates.TemplateResponse("discover.html", {"request": {}})
+
+@app.get("/discover-hx/",response_class=HTMLResponse)
+async def getDiscover(request: Request):
+    found = await discover.discover_all()
+    return templates.TemplateResponse("discover.jinja", {"request": request, "found": found})
 
 @app.get("/config/{code}")
 async def getConfigFor(code: str):
@@ -42,7 +50,7 @@ async def setConfig(p: TemperatureSetting):
 
 @app.get("/conditions/{code}")
 async def getConditions(code: str):
-    return TempReading.getTemperatureReading(code)
+    return tempsvc.getTemperatureReading(code)
 
 @app.get("/config-hx/", response_class=HTMLResponse)
 async def getConfig(request: Request):
@@ -55,5 +63,6 @@ async def setConfig(request: Request, code: str = Form("code"), temperature: str
 
 @app.get("/conditions-hx/{code}", response_class=HTMLResponse)
 async def getConditionsFor(request: Request, code: str):
-    result = TempReading.getTemperatureReading(code)
+    result = tempsvc.getTemperatureReading(code)
     return templates.TemplateResponse("conditions.jinja", {"request": request, "conditions": result, "sensor": code})
+

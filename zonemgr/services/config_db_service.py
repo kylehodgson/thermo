@@ -1,5 +1,4 @@
 from distutils.debug import DEBUG
-import psycopg2
 import zonemgr.models as models
 from zonemgr.db import ZoneManagerDB
 

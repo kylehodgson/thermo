@@ -3,73 +3,52 @@ import time
 import os
 import sys
 import asyncio
-import json
 import datetime
-import zonemgr.services.config_file_service as configsvc
-
+import zonemgr.services.config_db_service as configsvc
+import zonemgr.services.temp_reading_db_service as tempsvc
+from zonemgr.db import ZoneManagerDB
+import bleson
 from bleson import get_provider, Observer, UUID16
-from bleson.logger import log, set_level, ERROR, DEBUG, INFO
+from bleson.logger import log, ERROR, DEBUG, INFO
 from kasa import SmartPlug
 
-# Disable warnings
-set_level(ERROR)
+## the system will wait at least this amount of seconds before running again
+CHECK_INTERVAL = int(5)
+## the amount, in celcius, that the temperature may differ from the specified 
+## temperature before starting the heater
+ACCEPTABLE_DRIFT = float(1)
+## set the "last reading time" in the past so that the system will start immediately
+last_reading_time=int(time.time()) - (CHECK_INTERVAL * 2)
+## integer of the hour to stop the system when its set to "schedule"
+SCHEDULE_STOP = 8
+## integer of the hour to start the system when its set to "schedule"
+SCHEDULE_START = 22
 
-# # Uncomment for debug log level
-#set_level(DEBUG)
-
+bleson.logger.set_level(ERROR)
 # https://macaddresschanger.com/bluetooth-mac-lookup/A4%3AC1%3A38
 # OUI Prefix	Company
 # A4:C1:38	Telink Semiconductor (Taipei) Co. Ltd.
 GOVEE_BT_mac_OUI_PREFIX = "A4:C1:38"
 H5075_UPDATE_UUID16 = UUID16(0xEC88)
 
-# ###########################################################################
-CHECK_INTERVAL = int(5)
-DEFAULT_TEMP = float(20)
-ACCEPTABLE_DRIFT = float(1)
-
 def schedule_off():
     now = datetime.datetime.now()
-    if now.hour > 8 and now.hour < 22:
+    if now.hour > SCHEDULE_STOP and now.hour < SCHEDULE_START:
         return True
     return False
 
 def update_room_state(reading):
-    return update_room_state_file(reading)
-
-def update_room_state_file(reading):
-    import os.path
-    from pathlib import Path
-    DIR="data/"
-    filename=DIR + "thermo-state-" + reading['name'] + ".json"
-
-    if os.path.isfile(filename)==False:
-        Path(filename).touch()
-        with open(filename, 'w') as f:
-            json.dump(reading, f)
-
-    try:
-        f = open(filename) 
-        last=json.load(f)
-        f.close()
-    except OSError:
-        print(f"Error opening existing file {filename} ..")
-        return
-    
-    if reading['temp']!=last['temp']:
-        with open(filename, 'w') as f:
-            json.dump(reading, f)
+    svc=tempsvc(ZoneManagerDB())
+    svc.save(reading)
     return
 
-last_reading=int(time.time()) - (CHECK_INTERVAL * 2)
 async def process_thermo(reading):
-    #update room state with this reading
     update_room_state(reading)
     
     # see if enough time has elapsed since last reading so that we dont just run all the time 
-    global last_reading
-    this_reading=int(time.time())
-    elapsed=this_reading - last_reading
+    global last_reading_time
+    this_reading_time=int(time.time())
+    elapsed=this_reading_time - last_reading_time
     if elapsed < CHECK_INTERVAL:
         return
 
@@ -114,7 +93,7 @@ async def process_thermo(reading):
         await p.turn_off()
    
     # update reading time
-    last_reading=this_reading
+    last_reading_time=this_reading_time
 
 def reading_from_advertisement(advertisement):
     mfg_data='{:>7}'.format(int(advertisement.mfg_data.hex()[6:12],16))
@@ -123,32 +102,37 @@ def reading_from_advertisement(advertisement):
     battery = int(advertisement.mfg_data.hex()[12:14], 16)
     return {'name': str(advertisement._name), 'temp': float(temperature), 'battery': int(battery), 'humidity': float(humidity)}
 
-# On BLE advertisement callback
 def on_advertisement(advertisement):
     log.debug(advertisement)
-
     if advertisement.address.address.startswith(GOVEE_BT_mac_OUI_PREFIX):
         if H5075_UPDATE_UUID16 in advertisement.uuid16s:
             reading = reading_from_advertisement(advertisement)
             asyncio.run(process_thermo(reading))
 
-try:
-    adapter = get_provider().get_adapter()
-    observer = Observer(adapter)
-    observer.on_advertising_data = on_advertisement
-except Exception as e:
-    print(f"Error getting ble adaptor {e}")
-    raise
+def main() -> int:
 
-try:
-    while True:
-        observer.start()
-        time.sleep(2)
-        observer.stop()
-except KeyboardInterrupt:
     try:
-        observer.stop()
-        sys.exit(0)
-    except SystemExit:
-        observer.stop()
-        os._exit(0)
+        adapter = get_provider().get_adapter()
+        observer = Observer(adapter)
+        observer.on_advertising_data = on_advertisement
+    except Exception as e:
+        print(f"Error getting ble adaptor {e}")
+        raise
+
+    try:
+        while True:
+            observer.start()
+            time.sleep(2)
+            observer.stop()
+    except KeyboardInterrupt:
+        try:
+            observer.stop()
+            sys.exit(0)
+        except SystemExit:
+            observer.stop()
+            os._exit(0)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
