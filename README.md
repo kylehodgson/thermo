@@ -5,13 +5,29 @@ or other inexpensive, safe, electrical heating devices.
 
 A jumbo epic sized user story might go something like this:
 
-> *As a human concerned with climate change that lives in a building heated with natural gas (or oil, or anything that burns),*
+> *As a concerned human that heats my space with natural gas (or oil, or anything else that burns),*
 > 
-> *I would like a system that can turn safe space heaters (usually an infrared panel) in rooms where people are (often bedrooms),*
+> *I would like a system that can turn on and off electric heaters that plug in to a wall socket (usually an infrared panel) based on the temperature,*
 > 
-> *So that I can turn off the heat to areas of the space not being used and avoid burning stuff,*
+> *So that I can stop burning stuff to heat the whole building and only heat the rooms I want (usually a bedroom overnight),*
 > 
 > *Until I get a heat pump.*
+
+This project came about when I became obsessed with the possibility of infrared heat panels; and was unable to find a way to control them with a thermostat. With a nest we could add temperature sensors to different rooms, but that didn't give me the control I wanted.
+
+### My setup now
+
+ - Use the nest to do its thing; heating our home. Place one thermometer sensor in a room controlled by the `thermo` system.
+ - Set the nest schedule to focus on a `thermo` controlled room over night, but go back to our default schedule the rest of the time
+ - Three rooms in our house are "zones" for `thermo`. Two bedrooms, and one office like space.
+ - The bedrooms are set to "scheduled"; which means `thermo` will keep them up to temperature between 10 PM and 8 AM
+ - The office space we either enable or disable when we are using it via the web app, as its used in an ad hoc fashion
+ - The nest shuts down the furnace overnight since `thermo` keeps it warm enough
+ - The next morning it starts heating up the rest of the space
+ - This reliably saves us ~ 8 hours worth of gas heating every day! (now to calculate how long it will take me to get to a gigaton...)
+ - `thermo` and the `zone manager` are running on a Raspberry Pi 4 right now, though I'm working on getting it working on a Pi zero /W
+ - The govee thermometer / hygrometers emit BLE advertisements from rooms all over the house and the pi has no problem receiving them
+ - The panels are plugged in to kasa smartplugs (which is handy as they have a nice Python API)
 
 # Install and Run
 
