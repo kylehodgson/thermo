@@ -28,6 +28,7 @@ This project came about when I became obsessed with the possibility of infrared 
  - `thermo` and the `zone manager` are running on a Raspberry Pi 4 right now, though I'm working on getting it working on a Pi zero /W
  - The govee thermometer / hygrometers emit BLE advertisements from rooms all over the house and the pi has no problem receiving them
  - The panels are plugged in to kasa smartplugs (which is handy as they have a nice Python API)
+ - You could of course skip the nest sensors, and just schedule it to turn off when `thermo` kicks in; however, having the sensor in one of the rooms acts as a failsafe in case I forget to restart the service when I'm monkeying with it (or if the pi gets unplugged)
 
 # Install and Run
 
