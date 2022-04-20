@@ -5,7 +5,7 @@ or other inexpensive, safe, electrical heating devices.
 
 A jumbo epic sized user story might go something like this:
 
-> *As a human concerned with climate change that lives in or otherwise frequents a building heated with natural gas (or oil, or anything that burns),*
+> *As a human concerned with climate change that lives in a building heated with natural gas (or oil, or anything that burns),*
 > 
 > *I would like a system that can turn safe space heaters (usually an infrared panel) in rooms where people are (often bedrooms),*
 > 
