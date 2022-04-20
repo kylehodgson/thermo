@@ -18,7 +18,7 @@ This project came about when I became obsessed with the possibility of infrared 
 ### My setup now
 
  - Use the nest to do its thing; heating our home. Place one thermometer sensor in a room controlled by the `thermo` system.
- - Set the nest schedule to focus on a `thermo` controlled room over night, but go back to our default schedule the rest of the time
+ - Set the nest schedule to focus on a `thermo` controlled room over night, but go back to its default during the day / evening while we're using the kitchen, living room, dining room etc
  - Three rooms in our house are "zones" for `thermo`. Two bedrooms, and one office like space.
  - The bedrooms are set to "scheduled"; which means `thermo` will keep them up to temperature between 10 PM and 8 AM
  - The office space we either enable or disable when we are using it via the web app, as its used in an ad hoc fashion
@@ -33,6 +33,11 @@ More about the hardware we're using
  - The govee thermometer / hygrometers emit BLE advertisements from rooms all over the house and the pi has no problem receiving them
  - The panels are plugged in to kasa smartplugs (which is handy as they have a nice Python API)
  - You could skip the nest sensor bit, and just schedule the nest to switch to 'eco' mode when `thermo` kicks in; however, having the sensor in one of the rooms acts as a failsafe in case I forget to restart the service when I'm monkeying with it (or if the pi gets unplugged)
+
+Future directions
+ - I have this idea to use something like a [GridEye](https://industrial.panasonic.com/ww/products/pt/grid-eye) sensor to detect when we enter a room, instead of relying on humans to switch things on and off or wait for a schedule. Could fall back to something like a Bluetooth listener (to detect humans based on the phones they inevitably carry) or even a passive IR detector, but I think an active sensor makes the most sense (we've all waved to no one in particular to turn on the lights at work thanks to passive IR detectors)
+ - Extend the UI to get auto-discovery of devices working and set an initial configuration 
+ - Build a "hardware UI"; maybe a small LCD display to extend the pi so that humans can change the temperature without having to go fiddle around with the web interface on their phone
 
 # Install and Run
 
