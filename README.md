@@ -56,11 +56,11 @@ A `sensor` is a thermometer device that has been placed in an area (called a zon
 
 ### `zone`
 
-A `zone` is a room that you'd like to control. This application works by setting up separate zones, each with its own heater, sensor and smartplug.
+A `zone` is an area of a building (often a room) that you want to control the temperature of. This application works by setting up separate zones, each with its own heater, sensor and smartplug.
 
 ### `panel`
 
-`thermo` assumes the use of infrared panel heaters, such as the [Wexstar](https://www.wexstar.com/infrared-heaters) 600 watt. Any infrared heating panel will do. Please do not use any heating device unsafely.
+`thermo` assumes the use of infrared panel heaters, such as the [Wexstar](https://www.wexstar.com/infrared-heaters) 600 watt. Any infrared heating panel will do. Please do not use any heating device unsafely. The infrared panels being used by most users today are very good at warming up a *room*, say a 14x14 room with a door. They aren't quite as good at heating larger open plan areas of a home.
 
 ### `smartplug`
 
