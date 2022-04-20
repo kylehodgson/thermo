@@ -5,13 +5,13 @@ or other inexpensive, safe, electrical heating devices.
 
 A jumbo epic sized user story might go something like this:
 
-> As a human concerned with climate change that lives in or otherwise frequents a building heated with natural gas (or oil, or anything that burns),
+> *As a human concerned with climate change that lives in or otherwise frequents a building heated with natural gas (or oil, or anything that burns),*
 > 
-> I would like a system that can turn safe space heaters (usually an infrared panel) in rooms where people are (often bedrooms),
+> *I would like a system that can turn safe space heaters (usually an infrared panel) in rooms where people are (often bedrooms),*
 > 
-> So that I can turn off the heat to areas of the space not being used and avoid burning stuff,
+> *So that I can turn off the heat to areas of the space not being used and avoid burning stuff,*
 > 
-> Until I get a heat pump.
+> *Until I get a heat pump.*
 
 # Install and Run
 
