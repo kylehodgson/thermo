@@ -37,7 +37,7 @@ uvicorn zonemgr.api:app --host 0.0.0.0 --port 8888
 
 # Architecture
 
-![architecture diagram](https://drive.google.com/file/d/1Ou8uG74sjDqD0kGYJg5DkD5vumICnveZ/view?usp=sharing)
+![architecture diagram](https://drive.google.com/uc?id=1Ou8uG74sjDqD0kGYJg5DkD5vumICnveZ)
 [Architecture diagram link](https://docs.google.com/drawings/d/1zKq6OufqpD5Jf-5vY8Ynvn4B3upaHokV5EIA2D_sQYk/edit?usp=sharing)
 
 ## `thermo` service
