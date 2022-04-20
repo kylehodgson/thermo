@@ -13,7 +13,7 @@ A jumbo epic sized user story might go something like this:
 > 
 > *Until I get a heat pump.*
 
-This project came about when I became obsessed with the possibility of infrared heat panels; and was unable to find a way to control them with a thermostat. With a nest we could add temperature sensors to different rooms, but that didn't give me the control I wanted.
+This project came about when I became obsessed with the possibility of infrared heat panels (thanks to [Fully Charged](https://www.youtube.com/watch?v=NNITlK7HW0Q) on YouTube); and was unable to find a way to control them with a thermostat. With a nest we could add temperature sensors to different rooms, but that didn't give me the control I wanted.
 
 ### My setup now
 
