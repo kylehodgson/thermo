@@ -41,7 +41,7 @@ Future directions
 
 # Install and Run
 
-## Using bash and Raspian...
+## Using bash and Raspbian...
 
 ### Source `venv` environment and install dependencies
 ```bash
