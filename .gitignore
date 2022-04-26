@@ -1,3 +1,4 @@
+.vagrant/
 .vscode/
 venv
 config.json

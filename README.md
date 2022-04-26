@@ -16,6 +16,11 @@ python3 -m venv venv
 pip install -r requirements.txt
 ```
 
+### Set permissions for python to access bluetooth
+```bash
+sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
+```
+
 ### Install and setup postgres environment
 ```bash
 sudo apt install postgresql postgresql-contrib libpq-dev
