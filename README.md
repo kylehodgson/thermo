@@ -1,7 +1,9 @@
 # About
 This project seeks to automate the process of 1) listening to bluetooth thermometers / hygrometers, and 2)
 switching smart plugs off an on; particurlarly when those smart plugs are controlling infrared panel heaters
-or other inexpensive, safe, electrical heating devices.
+or other inexpensive, safe, electrical heating devices. 
+
+For more, try the [wiki](https://github.com/kylehodgson/thermo/wiki).
 
 
 # Install and Run
