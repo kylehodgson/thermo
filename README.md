@@ -46,14 +46,14 @@ cat example.env > .env
 
 Next, set the password for the user `zonemgr`:
 ```
-sudo -u postgres psql
+sudo -u postgres psql thermo
 psql (11.14 (Debian 11.14-0+deb10u1))
 Type "help" for help.
 
-postgres=# \password
+thermo=# \password zonemgr
 Enter new password: 
 Enter it again: 
-postgres=# 
+thermo=# 
 ```
 
 Then edit the `.env` file to change the password to match.
