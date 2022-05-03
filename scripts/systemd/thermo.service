@@ -1,0 +1,12 @@
+[Unit]
+Description=Thermo service
+DefaultDependencies=no
+After=network.target
+
+[Service]
+Type=forking
+User=thermo
+Group=thermo
+ExecStart=/usr/local/lib/thermo/thermo.sh start
+PIDFile=thermo/thermo.pid
+

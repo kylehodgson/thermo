@@ -1,0 +1,12 @@
+[Unit]
+Description=Thermo zonemanager web user interface
+DefaultDependencies=no
+After=network.target
+
+[Service]
+Type=forking
+User=thermo
+Group=thermo
+ExecStart=/usr/local/lib/thermo/zonemgr.sh start
+PIDFile=thermo/zonemgr.pid
+

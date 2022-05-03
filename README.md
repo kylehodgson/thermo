@@ -27,26 +27,13 @@ Below are some pointers on setting up Postgres on a stock Raspberry pi. Instruct
 ```
 sudo apt install postgresql postgresql-contrib libpq-dev
 sudo systemctl start postgresql
-sudo -u postgres createdb thermo
-sudo -u postgres createuser zonemgr
-```
-
-### Run migrations
-Next, run the provided migrations file to set up the required tables. 
-```
-sudo -u postgres psql thermo -f db/migration-0001.sql
+sudo -u postgres createuser -d zonemgr
 ```
 
 ### App connection
-`thermo` assumes it can find the correct connection information in the shell environment. We provide an example environment file in `example.env`, copy that and customize it to your needs.
-
+First, set a password for the user `zonemgr`:
 ```
-cat example.env > .env
-```
-
-Next, set the password for the user `zonemgr`:
-```
-sudo -u postgres psql thermo
+sudo -u postgres psql
 psql (11.14 (Debian 11.14-0+deb10u1))
 Type "help" for help.
 
@@ -56,7 +43,29 @@ Enter it again:
 thermo=# 
 ```
 
-Then edit the `.env` file to change the password to match.
+`thermo` assumes it can find the correct connection information in the shell environment. We provide an example environment file in `example.env`, copy that and customize it to your needs.
+
+```
+cat example.env > .env
+```
+
+Then edit the resulting `.env` file to change the password to match.
+
+Next create the database as the thermo user you created above.
+```
+cd ~/projects/thermo
+. .env
+createdb thermo
+```
+### Run migrations
+
+Next, run the provided migrations file to set up the required tables. 
+```
+cd ~/projects/thermo
+. .env
+psql thermo -f db/migration-0001.sql
+```
+
 
 ## Run
 ```bash
