@@ -1,7 +1,6 @@
-from distutils.debug import DEBUG
 import zonemgr.models as models
-from zonemgr.models import ServiceTypes
 from zonemgr.db import ZoneManagerDB
+from zonemgr.models import ServiceTypes
 
 class ConfigService:
     zmdb: ZoneManagerDB
