@@ -62,20 +62,16 @@ async def process_thermo(reading):
     elapsed=this_reading_time - last_reading_time
     if elapsed < CHECK_INTERVAL:
         return
-
-    # update reading time
     last_reading_time=int(time.time())
 
     update_room_state(reading)
 
     logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    for sensor in configsvc.load_config():
-        if sensor['sensor_id']==reading['sensor_id']:
-            config = sensor
-
+    (id,config)=configsvc.get_sensor_config(reading['sensor_id'])
     if not config:
-        return        
+        print(f"[{logtime}] could not find config for sensor {reading['sensor_id']}")
+        return
     
     print(f"[{logtime}] sensor_id: {reading['sensor_id']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
 
@@ -83,21 +79,21 @@ async def process_thermo(reading):
         p=SmartPlug(config['plug'])
         await p.update()
     except:
-        print(f"[{logtime}] trouble connecting to plug {config['plug']} in {config['location']}")
+        print(f"[{logtime}] trouble connecting to plug {config['plug']} in location {config['location']}")
         return False
 
     # if the sensor is configured to be turned off, make sure it is off
-    if str(config['service_type'])==str("off") and p.is_off:
+    if str(config['service_type']).lower()==str("off") and p.is_off:
         return
-    if str(config['service_type'])==str("off") and p.is_on:
+    if str(config['service_type']).lower()==str("off") and p.is_on:
         print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
         await p.turn_off()
         return
 
     # if the sensors schedule indicates the panel should be turned off, make sure it is off
-    if str(config['service_type'])==str("scheduled") and schedule_off() and p.is_off:
+    if str(config['service_type']).lower()==str("scheduled") and schedule_off() and p.is_off:
         return
-    if str(config['service_type'])==str("scheduled") and schedule_off() and p.is_on:
+    if str(config['service_type']).lower()==str("scheduled") and schedule_off() and p.is_on:
         print(f"[{logtime}] panel in room {config['location']} on off schedule; turning it off")
         await p.turn_off()
         return
@@ -131,8 +127,8 @@ def main() -> int:
     try:
         while True:
             observer.start()
-            time.sleep(120)
-            observer.stop()
+            time.sleep(10)  # I don't yet understand why this start/sleep/stop loop is necessary.
+            observer.stop() # When I skip the sleep and stop, it forks to the background but doesn't work
     except KeyboardInterrupt:
         try:
             observer.stop()
