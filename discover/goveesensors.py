@@ -36,8 +36,8 @@ class GoveeSensorsDiscovery:
         if advertisement.address.address.startswith(GoveeSensorsDiscovery.GOVEE_BT_mac_OUI_PREFIX):
             if GoveeSensorsDiscovery.H5075_UPDATE_UUID16 in advertisement.uuid16s:
                 reading = GoveeSensorsDiscovery.reading_from_advertisement(advertisement)
-                if(reading['name'] not in self.found_sensor_names):
-                    self.found_sensor_names.append(reading['name'])
+                if(reading['sensor_id'] not in self.found_sensor_names):
+                    self.found_sensor_names.append(reading['sensor_id'])
                     self.sensors.append(reading)
 
 
