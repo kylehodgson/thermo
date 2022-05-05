@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from zonemgr.models import SensorConfiguration
+from zonemgr.services.plug_db_service import PlugService
 from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.services.config_db_service import ConfigService
 from zonemgr.db import ZoneManagerDB
@@ -11,6 +11,7 @@ from discover import discover
 zmdb=ZoneManagerDB()
 configsvc = ConfigService(zmdb)
 tempsvc=TempReadingService(zmdb)
+plugsvc=PlugService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
 app = FastAPI()
@@ -33,7 +34,7 @@ async def getDiscoverUI():
 
 @app.get("/discover-hx/",response_class=HTMLResponse)
 async def getDiscover(request: Request):
-    found = await discover.discover_all()
+    found = await discover.discover_all(plugsvc)
     return templates.TemplateResponse("discover.jinja", {"request": request, "found": found})
 
 @app.get("/config/{sensor_id}")
@@ -43,10 +44,6 @@ async def getConfigFor(sensor_id: str):
 @app.get("/config/{sensor_id}/temp")
 async def getTemperatureFor(sensor_id: str):
     return configsvc.load_config()
-
-# @app.post("/config/")
-# async def setConfig(p: SensorConfiguration):
-#     return configsvc.set_sensor_config(p.sensor_id, p.temp)
 
 @app.get("/conditions/{sensor_id}")
 async def getConditions(sensor_id: str):

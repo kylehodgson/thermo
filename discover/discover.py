@@ -1,10 +1,13 @@
 import asyncio
+
+from zonemgr.services.plug_db_service import PlugService
 from . import kasaplugs
 from . import goveesensors
 
-async def discover_all():
+async def discover_all(plugsvc: PlugService):
     plugs = await kasaplugs.discover()
     sensors = goveesensors.discover()
+    plugsvc.savePlugs(plugs)
     found = {}
     found['plugs']=plugs
     found['sensors']=sensors

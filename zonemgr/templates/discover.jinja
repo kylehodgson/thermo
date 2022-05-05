@@ -1,6 +1,6 @@
 {% for sensor in found['sensors'] %}
-    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
-    <div class="card-header">Bluetooth temperature sensor</div>
+    <div class="card mb-3" style="max-width: 18rem;">
+    <div class="card-header text-white bg-info">Bluetooth temperature sensor</div>
     <div class="card-body">
         <h5 class="card-title">{{sensor['sensor_id']}}</h5>
         <p class="card-text">
@@ -13,12 +13,13 @@
             <dd class="col-sm-5">{{sensor['battery']}}%</dd>
         </dl>
         </p>
+        <a href="config-edit-hx/{{sensor['sensor_id']}}">Edit</a>
     </div>
     </div>
 {% endfor %}
 {% for plug in found['plugs'] %}
-    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
-    <div class="card-header">Wifi smart plug</div>
+    <div class="card  mb-3" style="max-width: 18rem;">
+    <div class="card-header text-white bg-info">Wifi smart plug</div>
     <div class="card-body">
         <h5 class="card-title">{{plug['sensor_id']}}</h5>
         <p class="card-text">{{plug['ip_addr']}} </p>

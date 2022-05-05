@@ -20,3 +20,8 @@ class TemperatureReading(BaseModel):
     temp: float
     battery: int
     humidity: float
+
+class PlugConfiguration(BaseModel):
+    name: str
+    ip: str
+    sensor: Optional[str]
