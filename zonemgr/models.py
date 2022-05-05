@@ -1,17 +1,19 @@
 from pydantic import BaseModel
+from typing import Optional
+from enum import Enum
 
-class TemperatureSetting(BaseModel):
-    code: str
-    temperature: float
-    servicetype: str
+class ServiceTypes(Enum):
+    Scheduled="Scheduled"
+    On="On"
+    Off="Off"
 
 class SensorConfiguration(BaseModel):
     sensor_id: str
     temp: float
-    service: str
-    name: str
-    location: str
-    plug: str
+    service_type: str
+    name: Optional[str]
+    location: Optional[str]
+    plug: Optional[str]
 
 class TemperatureReading(BaseModel):
     sensor_id: str

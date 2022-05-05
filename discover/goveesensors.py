@@ -23,12 +23,13 @@ class GoveeSensorsDiscovery:
     sensors=[]
     found_sensor_names=[]
     
+    @staticmethod
     def reading_from_advertisement(advertisement):
         mfg_data='{:>7}'.format(int(advertisement.mfg_data.hex()[6:12],16))
         temperature=float(mfg_data[0:4])/10
         humidity=float(mfg_data[4:7])/10
         battery = int(advertisement.mfg_data.hex()[12:14], 16)
-        return {'name': str(advertisement._name), 'temp': float(temperature), 'battery': int(battery), 'humidity': float(humidity)}
+        return {'sensor_id': str(advertisement._name), 'temp': float(temperature), 'battery': int(battery), 'humidity': float(humidity)}
 
     def on_advertisement(self,advertisement):
         log.debug(advertisement)

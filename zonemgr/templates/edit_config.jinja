@@ -1,0 +1,28 @@
+<div class="container w-75 p-3" id="config_editor">
+
+<form>
+		<input type="hidden" id="i_sensor_id" name="sensor_id" value="{{sensor['sensor_id']}}">
+		<div class="input-group">
+			<input class="form-control-lg" type="text" id="temp-{{sensor['sensor_id']}}" size="4" name="temp" value="{{sensor['temp']}}">
+			<span class="input-group-text">° C</span>
+			<button type="button" class="btn btn-primary btn-lg" hx-post="/config-hx/" hx-target="#showall" hx-swap="outerHTML">Save</button>
+		</div>
+        <div class="input-group">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="service_type-scheduled" name="service_type" 
+                    value="scheduled" {% if sensor.service_type.lower()=="scheduled" %}checked{% endif %} >
+                <label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="service_type-on" name="service_type" 
+                    value="on" {% if sensor.service_type.lower() == "on" %}checked{% endif %} >
+                <label class="form-check-label" for="service_type-on">On</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="service_type-off" name="service_type" 
+                value="off" {% if sensor.service_type.lower() == "off" %}checked{% endif %} >
+                <label class="form-check-label" for="service_type-off">Off</label>
+            </div>
+        </div>
+</form>        
+</div>

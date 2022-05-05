@@ -1,16 +1,19 @@
 #!/usr/bin/env python
+from fnmatch import translate
 import time
 import os
 import sys
 import asyncio
 import datetime
-import zonemgr.services.config_db_service as configsvc
-import zonemgr.services.temp_reading_db_service as tempsvc
+from zonemgr.services.config_db_service import ConfigService
+from zonemgr.services.temp_reading_db_service import TempReadingService
 from zonemgr.db import ZoneManagerDB
+from zonemgr.models import TemperatureReading
 import bleson
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, ERROR, DEBUG, INFO
 from kasa import SmartPlug
+from discover.goveesensors import GoveeSensorsDiscovery
 
 ## the system will wait at least this amount of seconds before running again
 CHECK_INTERVAL = int(5)
@@ -23,13 +26,18 @@ last_reading_time=int(time.time()) - (CHECK_INTERVAL * 2)
 SCHEDULE_STOP = 8
 ## integer of the hour to start the system when its set to "schedule"
 SCHEDULE_START = 22
-
+## integer - the number of seconds that should pass before we write another record to the db
+TEMPERATURE_RECORD_STEP = 60 * 10
 bleson.logger.set_level(ERROR)
 # https://macaddresschanger.com/bluetooth-mac-lookup/A4%3AC1%3A38
 # OUI Prefix	Company
 # A4:C1:38	Telink Semiconductor (Taipei) Co. Ltd.
 GOVEE_BT_mac_OUI_PREFIX = "A4:C1:38"
 H5075_UPDATE_UUID16 = UUID16(0xEC88)
+
+zmdb=ZoneManagerDB()
+tempsvc=TempReadingService(zmdb)
+configsvc=ConfigService(zmdb)
 
 def schedule_off():
     now = datetime.datetime.now()
@@ -38,13 +46,16 @@ def schedule_off():
     return False
 
 def update_room_state(reading):
-    svc=tempsvc(ZoneManagerDB())
-    svc.save(reading)
+    (id,currentConfig)=configsvc.get_sensor_config(reading['sensor_id'])
+    if not currentConfig:
+        print(f"Found a new sensor in {reading}")
+        configsvc.create_default_for(reading)
+
+    tr = TemperatureReading(battery=reading['battery'], temp=reading['temp'], humidity=reading['humidity'], sensor_id=reading['sensor_id'])
+    tempsvc.save_if_newer(tr,TEMPERATURE_RECORD_STEP)
     return
 
-async def process_thermo(reading):
-    update_room_state(reading)
-    
+async def process_thermo(reading):   
     # see if enough time has elapsed since last reading so that we dont just run all the time 
     global last_reading_time
     this_reading_time=int(time.time())
@@ -52,14 +63,21 @@ async def process_thermo(reading):
     if elapsed < CHECK_INTERVAL:
         return
 
+    # update reading time
+    last_reading_time=int(time.time())
+
+    update_room_state(reading)
+
     logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    #print(f"[{logtime}] Location: {reading['name']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
+
+    for sensor in configsvc.load_config():
+        if sensor['sensor_id']==reading['sensor_id']:
+            config = sensor
+
+    if not config:
+        return        
     
-    SENSORS=configsvc.load_config()
-    if reading['name'] in SENSORS:
-        config=SENSORS[reading['name']]
-    else:
-        return
+    print(f"[{logtime}] sensor_id: {reading['sensor_id']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
 
     try:
         p=SmartPlug(config['plug'])
@@ -69,17 +87,17 @@ async def process_thermo(reading):
         return False
 
     # if the sensor is configured to be turned off, make sure it is off
-    if str(config['service'])==str("off") and p.is_off:
+    if str(config['service_type'])==str("off") and p.is_off:
         return
-    if str(config['service'])==str("off") and p.is_on:
+    if str(config['service_type'])==str("off") and p.is_on:
         print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
         await p.turn_off()
         return
 
     # if the sensors schedule indicates the panel should be turned off, make sure it is off
-    if str(config['service'])==str("scheduled") and schedule_off() and p.is_off:
+    if str(config['service_type'])==str("scheduled") and schedule_off() and p.is_off:
         return
-    if str(config['service'])==str("scheduled") and schedule_off() and p.is_on:
+    if str(config['service_type'])==str("scheduled") and schedule_off() and p.is_on:
         print(f"[{logtime}] panel in room {config['location']} on off schedule; turning it off")
         await p.turn_off()
         return
@@ -91,26 +109,17 @@ async def process_thermo(reading):
     if p.is_on and float(reading['temp']) > float(config['temp']) + float(ACCEPTABLE_DRIFT) :
         print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably warm, turning off panel")
         await p.turn_off()
-   
-    # update reading time
-    last_reading_time=this_reading_time
 
-def reading_from_advertisement(advertisement):
-    mfg_data='{:>7}'.format(int(advertisement.mfg_data.hex()[6:12],16))
-    temperature=float(mfg_data[0:4])/10
-    humidity=float(mfg_data[4:7])/10
-    battery = int(advertisement.mfg_data.hex()[12:14], 16)
-    return {'name': str(advertisement._name), 'temp': float(temperature), 'battery': int(battery), 'humidity': float(humidity)}
 
 def on_advertisement(advertisement):
     log.debug(advertisement)
     if advertisement.address.address.startswith(GOVEE_BT_mac_OUI_PREFIX):
         if H5075_UPDATE_UUID16 in advertisement.uuid16s:
-            reading = reading_from_advertisement(advertisement)
+            reading = GoveeSensorsDiscovery.reading_from_advertisement(advertisement)
             asyncio.run(process_thermo(reading))
 
 def main() -> int:
-
+    print("Starting thermo process.")
     try:
         adapter = get_provider().get_adapter()
         observer = Observer(adapter)
@@ -122,7 +131,7 @@ def main() -> int:
     try:
         while True:
             observer.start()
-            time.sleep(2)
+            time.sleep(120)
             observer.stop()
     except KeyboardInterrupt:
         try:
