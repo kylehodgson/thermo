@@ -66,3 +66,7 @@ async def getConditionsFor(request: Request, sensor_id: str):
     result = tempsvc.getTemperatureReading(sensor_id)
     return templates.TemplateResponse("conditions.jinja", {"request": request, "conditions": result, "sensor": sensor_id})
 
+@app.get("/config-edit-hx/{sensor_id}", response_class=HTMLResponse)
+async def getConfigEditorFor(request: Request, sensor_id: str):
+    (id,sensor)=configsvc.get_sensor_config(sensor_id)
+    return templates.TemplateResponse("edit_config.jinja", {"request": request, "sensor": sensor, "id": id})
