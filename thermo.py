@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from fnmatch import translate
 import time
 import os
 import sys
@@ -46,65 +45,67 @@ def schedule_off():
     return False
 
 def update_room_state(reading):
-    (id,currentConfig)=configsvc.get_sensor_config(reading['sensor_id'])
+    (id,currentConfig)=configsvc.get_sensor_config(reading.sensor_id)
     if not currentConfig:
         print(f"Found a new sensor in {reading}")
         configsvc.create_default_for(reading)
 
-    tr = TemperatureReading(battery=reading['battery'], temp=reading['temp'], humidity=reading['humidity'], sensor_id=reading['sensor_id'])
+    tr = TemperatureReading(battery=reading.battery, temp=reading.temp, humidity=reading.humidity, sensor_id=reading.sensor_id)
     tempsvc.save_if_newer(tr,TEMPERATURE_RECORD_STEP)
     return
 
-async def process_thermo(reading):   
-    # see if enough time has elapsed since last reading so that we dont just run all the time 
+def too_soon() -> bool:
     global last_reading_time
-    this_reading_time=int(time.time())
-    elapsed=this_reading_time - last_reading_time
-    if elapsed < CHECK_INTERVAL:
+    this_reading_time = int(time.time())
+    elapsed = this_reading_time - last_reading_time
+    last_reading_time=this_reading_time
+    return elapsed < CHECK_INTERVAL
+
+async def process_thermo(reading: TemperatureReading):
+    if too_soon():
         return
-    last_reading_time=int(time.time())
 
     update_room_state(reading)
 
     logtime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    (id,config)=configsvc.get_sensor_config(reading['sensor_id'])
+    (id,config)=configsvc.get_sensor_config(reading.sensor_id)
     if not config:
-        print(f"[{logtime}] could not find config for sensor {reading['sensor_id']}")
+        print(f"[{logtime}] could not find config for sensor {reading.sensor_id}")
         return
     
-    print(f"[{logtime}] sensor_id: {reading['sensor_id']} temp: {reading['temp']} humidity: {reading['humidity']} battery: {reading['battery']}")
+    print(f"[{logtime}] sensor_id: {reading.sensor_id} temp: {reading.temp} humidity: {reading.humidity} battery: {reading.battery}")
 
     try:
-        p=SmartPlug(config['plug'])
-        await p.update()
+        plug=SmartPlug(config.plug)
+        await plug.update()
     except:
-        print(f"[{logtime}] trouble connecting to plug {config['plug']} in location {config['location']}")
+        print(f"[{logtime}] trouble connecting to plug {config.plug} in location {config.location}")
         return False
 
     # if the sensor is configured to be turned off, make sure it is off
-    if str(config['service_type']).lower()==str("off") and p.is_off:
+    if config.service_type.lower()=="off" and plug.is_off:
         return
-    if str(config['service_type']).lower()==str("off") and p.is_on:
-        print(f"[{logtime}] panel in room {config['location']} on and should be off, turning it off")
-        await p.turn_off()
+    if config.service_type.lower()=="off" and plug.is_on:
+        print(f"[{logtime}] panel in room {config.location} on and should be off, turning it off")
+        await plug.turn_off()
         return
 
     # if the sensors schedule indicates the panel should be turned off, make sure it is off
-    if str(config['service_type']).lower()==str("scheduled") and schedule_off() and p.is_off:
+    if config.service_type.lower()=="scheduled" and schedule_off() and plug.is_off:
         return
-    if str(config['service_type']).lower()==str("scheduled") and schedule_off() and p.is_on:
-        print(f"[{logtime}] panel in room {config['location']} on off schedule; turning it off")
-        await p.turn_off()
+    if config.service_type.lower()=="scheduled" and schedule_off() and plug.is_on:
+        print(f"[{logtime}] panel in room {config.location} on off schedule; turning it off")
+        await plug.turn_off()
         return
 
     # sensor enabled, check if temperature is in range
-    if p.is_off and float(reading['temp']) < float(config['temp']) - float(ACCEPTABLE_DRIFT) :
-        print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably cool, turning on panel")
-        await p.turn_on()
-    if p.is_on and float(reading['temp']) > float(config['temp']) + float(ACCEPTABLE_DRIFT) :
-        print(f"[{logtime}] temp {reading['temp']} in room {config['location']} is unacceptably warm, turning off panel")
-        await p.turn_off()
+    if plug.is_off and float(reading.temp) < config.temp - float(ACCEPTABLE_DRIFT) :
+        print(f"[{logtime}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
+        await plug.turn_on()
+    if plug.is_on and float(reading.temp) > config.temp + float(ACCEPTABLE_DRIFT) :
+        print(f"[{logtime}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
+        await plug.turn_off()
 
 
 def on_advertisement(advertisement):
