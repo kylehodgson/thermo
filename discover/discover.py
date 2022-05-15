@@ -1,13 +1,17 @@
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+    path.append(dir(path[0]))
+
 import asyncio
+import kasaplugs
+import goveesensors
 
-from zonemgr.services.plug_db_service import PlugService
-from . import kasaplugs
-from . import goveesensors
-
-async def discover_all(plugsvc: PlugService):
+async def discover_all(plugsvc=None):
     plugs = await kasaplugs.discover()
     sensors = goveesensors.discover()
-    plugsvc.savePlugs(plugs)
+    if plugsvc:
+        plugsvc.savePlugs(plugs)
     found = {}
     found['plugs']=plugs
     found['sensors']=sensors

@@ -6,3 +6,6 @@ class PlugService:
 
     def __init__(self, zmdb: ZoneManagerDB) -> None:
         self.zmdb=zmdb
+
+    def savePlugs(self,plugs):
+        print(f"plugs: {plugs}")

@@ -1,9 +1,14 @@
-#!/usr/bin/env python
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+    path.append(dir(path[0]))
+
 import time
 import sys
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, set_level, ERROR, DEBUG, INFO
 from zonemgr.models import TemperatureReading
+
 # Disable warnings
 set_level(ERROR)
 
@@ -52,9 +57,7 @@ def discover():
 
 def main() -> int:
     for sensor in discover():
-        print(f"name: {sensor['name']}")
-        for property in sensor:
-            print(f"\t{property}:\t{sensor[property]}")
+        print(f"sensor: {sensor}")
     return 0
 
 if __name__ == '__main__':
