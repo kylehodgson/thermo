@@ -75,3 +75,11 @@ cd ~/projects/thermo
 python thermo.py
 uvicorn zonemgr.api:app --host 0.0.0.0 --port 8888
 ```
+
+## Install and run as service
+```bash
+cd ~/projects/thermo
+sudo ./install.sh
+sudo systemctl start thermo
+sudo systemctl start zonemgr
+```
