@@ -1,5 +1,5 @@
 from kasa import SmartPlug as KasaPlugService
-from zonecontroller.config import SmartPlugType
+from thermostat.config import SmartPlugType
 from zonemgr.models import PlugConfiguration
 
 class SmartPlug:
