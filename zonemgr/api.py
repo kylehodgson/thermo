@@ -2,15 +2,15 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from zonemgr.services.plug_db_service import PlugService
-from zonemgr.services.temp_reading_db_service import TempReadingService
-from zonemgr.services.config_db_service import ConfigService
+from zonemgr.services.temp_reading_db_service import TempReadingStore
+from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.db import ZoneManagerDB
 from discover import discover
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()
-configsvc = ConfigService(zmdb)
-tempsvc=TempReadingService(zmdb)
+configsvc = ConfigStore(zmdb)
+tempsvc=TempReadingStore(zmdb)
 plugsvc=PlugService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 

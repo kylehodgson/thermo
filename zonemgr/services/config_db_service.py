@@ -2,7 +2,7 @@ import zonemgr.models as models
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import ServiceTypes
 
-class ConfigService:
+class ConfigStore:
     zmdb: ZoneManagerDB
 
     def __init__(self, zmdb: ZoneManagerDB) -> None:

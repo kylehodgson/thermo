@@ -1,7 +1,7 @@
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import TemperatureReading
 
-class TempReadingService:
+class TempReadingStore:
     zmdb: ZoneManagerDB
 
     def __init__(self, zmdb: ZoneManagerDB) -> None:
