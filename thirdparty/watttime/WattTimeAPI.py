@@ -1,21 +1,28 @@
+from decimal import InvalidOperation
+import string
 import requests
 from requests.auth import HTTPBasicAuth
 
-def wtLogin():
-    login_url = 'https://api2.watttime.org/v2/login'
-    token = requests.get(login_url, auth=HTTPBasicAuth('longbranchflyer', 'AJqPC4aXQLo*gm8mQEoWHcWK')).json()['token']
-    return token
+class WattTime:
+    token=""
+    def __init__(self, username: string, password: string) -> None:
+        login_url = 'https://api2.watttime.org/v2/login'
+        self.token = requests.get(login_url, auth=HTTPBasicAuth(username, password)).json()['token']
 
-def wtGetIndex(token):
-    index_url = 'https://api2.watttime.org/index'
-    headers = {'Authorization': 'Bearer {}'.format(token)}
-    params = {'ba': 'IESO_NORTH'}
-    rsp=requests.get(index_url, headers=headers, params=params)
-    return rsp.text
+    def getIndex(self, ba):
+        if self.token=="":
+            raise InvalidOperation("please login first.")
+        index_url = 'https://api2.watttime.org/index'
+        headers = {'Authorization': 'Bearer {}'.format(self.token)}
+        params = {'ba': '{}'.format(ba)}
+        rsp=requests.get(index_url, headers=headers, params=params)
+        return rsp.text
 
-def wtGetBA(token):
-    region_url = 'https://api2.watttime.org/v2/ba-from-loc'
-    headers = {'Authorization': 'Bearer {}'.format(token)}
-    params = {'latitude': '43.255707196639314', 'longitude': '-79.95159344351713'}
-    rsp=requests.get(region_url, headers=headers, params=params)
-    return rsp.text
+    def getBA(self, latt, long)->string:
+        if self.token=="":
+            raise InvalidOperation("please login first.")
+        region_url = 'https://api2.watttime.org/v2/ba-from-loc'
+        headers = {'Authorization': 'Bearer {}'.format(self.token)}
+        params = {'latitude': '{}'.format(latt), 'longitude': '{}'.format(long)}
+        rsp=requests.get(region_url, headers=headers, params=params)
+        return rsp.text

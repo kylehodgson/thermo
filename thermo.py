@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import string
 import time
 import os
 import sys
@@ -14,6 +15,8 @@ import bleson
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, ERROR, DEBUG, INFO
 from discover.goveesensors import GoveeSensorsDiscovery
+from thirdparty.watttime import WattTimeAPI
+import json
 
 ## if ble advertisements with temperature readings are appearing faster than this rate, ignore them 
 ## until this many seconds have passed so that the script isnt running constantly
@@ -28,6 +31,14 @@ SCHEDULE_START = 22
 ## integer - the number of seconds that should pass before we write another record to the db
 ## for a given sensor
 TEMPERATURE_RECORD_STEP = 60 * 10
+
+ECO_REDUCTION=float(1.5)
+
+WATTTIMEUSERNAME="longbranchflyer"
+WATTTIMEPASSWORD="AJqPC4aXQLo*gm8mQEoWHcWK"
+LATT="43.255707196639314"
+LONG="-79.95159344351713"
+MAXMOER=50
 
 ## set the "last reading time" in the past so that the system will start immediately
 last_reading_time=int(time.time()) - (CHECK_INTERVAL * 2)
@@ -66,6 +77,8 @@ async def handle_reading(reading: TemperatureReading, config: SensorConfiguratio
         print(f"[{logtime()}] trouble connecting to plug {config.plug} in location {config.location} : {err} {type(err)}")
         return
     
+    moer=get_moer()
+
     # if the sensor is configured to be turned off, make sure it is off
     if config.service_type == ServiceTypes.Off and plugSvc.is_off:
         return
@@ -75,24 +88,41 @@ async def handle_reading(reading: TemperatureReading, config: SensorConfiguratio
         return
 
     # if the sensors schedule indicates the panel should be turned off, make sure it is off
-    if config.service_type == ServiceTypes.Scheduled  and schedule_off() and plugSvc.is_off:
+    if config.service_type == ServiceTypes.Scheduled and schedule_off() and plugSvc.is_off:
         return
     if config.service_type== ServiceTypes.Scheduled and schedule_off() and plugSvc.is_on:
         print(f"[{logtime()}] panel in room {config.location} on off schedule; turning it off")
         await plugSvc.turn_off()
         return
 
-    # sensor enabled, check if temperature is in range
-    if plugSvc.is_off and float(reading.temp) < config.temp - float(ACCEPTABLE_DRIFT) :
-        print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
-        await plugSvc.turn_on()
-    if plugSvc.is_on and float(reading.temp) > config.temp + float(ACCEPTABLE_DRIFT) :
-        print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
-        await plugSvc.turn_off()
+    # sensor enabled, check if temperature is in range, and enable eco mode if moer is greater than max
+    if moer>MAXMOER:
+        print(f"Current MOER is greater than max; setting eco mode") # will let temps fall to double the usual drift, and will stop heating at once when temp has been reached
+        if plugSvc.is_off and float(reading.temp) < config.temp - ACCEPTABLE_DRIFT - ECO_REDUCTION  :
+            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
+            await plugSvc.turn_on()
+        if plugSvc.is_on and float(reading.temp) > config.temp + ACCEPTABLE_DRIFT - ECO_REDUCTION :
+            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
+            await plugSvc.turn_off()
+    else:
+        if plugSvc.is_off and float(reading.temp) < config.temp - float(ACCEPTABLE_DRIFT) :
+            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
+            await plugSvc.turn_on()
+        if plugSvc.is_on and float(reading.temp) > config.temp + float(ACCEPTABLE_DRIFT) :
+            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
+            await plugSvc.turn_off()
+
+    
+
+def get_moer() -> int:
+    wt=WattTimeAPI.WattTime(WATTTIMEUSERNAME,WATTTIMEPASSWORD)
+    BA=json.loads(wt.getBA(LATT,LONG))['abbrev']
+    moer=json.loads(wt.getIndex(BA))['percent']
+    print(f"[{logtime()}] moer : {moer}")
+    return int(moer)
 
 
 def on_advertisement(advertisement):
-
     GOVEE_BT_MAC_OUI_PREFIX = "A4:C1:38"
     H5075_UPDATE_UUID16 = UUID16(0xEC88)
 
@@ -129,7 +159,6 @@ def main() -> int:
         except SystemExit:
             observer.stop()
             os._exit(0)
-    return 0
 
 
 if __name__ == '__main__':
