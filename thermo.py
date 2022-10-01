@@ -8,8 +8,8 @@ from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import SensorConfiguration, TemperatureReading, ServiceTypes
-from thermostat.smartplug import SmartPlug
-
+#from thermostat.smartplug import SmartPlug
+import kasa
 import bleson
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, ERROR, DEBUG, INFO
@@ -44,10 +44,6 @@ def schedule_off():
 
 def update_room_state(reading):
     (id,currentConfig)=configStore.get_sensor_config(reading.sensor_id)
-    if not currentConfig:
-        print(f"Found a new sensor in reading {reading}")
-        configStore.create_default_for(reading)
-
     tr = TemperatureReading(battery=reading.battery, temp=reading.temp, humidity=reading.humidity, sensor_id=reading.sensor_id)
     tempStore.save_if_newer(tr,TEMPERATURE_RECORD_STEP)
     return
@@ -64,17 +60,17 @@ def logtime() -> str:
 
 async def handle_reading(reading: TemperatureReading, config: SensorConfiguration):
     try:
-        plugSvc=SmartPlug(config.plug)
+        plugSvc=kasa.SmartPlug(config.plug)
         await plugSvc.update()
-    except:
-        print(f"[{logtime()}] trouble connecting to plug {config.plug} in location {config.location}")
+    except BaseException as err:
+        print(f"[{logtime()}] trouble connecting to plug {config.plug} in location {config.location} : {err} {type(err)}")
         return
     
     # if the sensor is configured to be turned off, make sure it is off
     if config.service_type == ServiceTypes.Off and plugSvc.is_off:
         return
     if config.service_type == ServiceTypes.Off  and plugSvc.is_on:
-        print(f"[{logtime}] panel in room {config.location} on and should be off, turning it off")
+        print(f"[{logtime()}] panel in room {config.location} on and should be off, turning it off")
         await plugSvc.turn_off()
         return
 
@@ -82,16 +78,16 @@ async def handle_reading(reading: TemperatureReading, config: SensorConfiguratio
     if config.service_type == ServiceTypes.Scheduled  and schedule_off() and plugSvc.is_off:
         return
     if config.service_type== ServiceTypes.Scheduled and schedule_off() and plugSvc.is_on:
-        print(f"[{logtime}] panel in room {config.location} on off schedule; turning it off")
+        print(f"[{logtime()}] panel in room {config.location} on off schedule; turning it off")
         await plugSvc.turn_off()
         return
 
     # sensor enabled, check if temperature is in range
     if plugSvc.is_off and float(reading.temp) < config.temp - float(ACCEPTABLE_DRIFT) :
-        print(f"[{logtime}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
+        print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
         await plugSvc.turn_on()
     if plugSvc.is_on and float(reading.temp) > config.temp + float(ACCEPTABLE_DRIFT) :
-        print(f"[{logtime}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
+        print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
         await plugSvc.turn_off()
 
 
@@ -108,7 +104,6 @@ def on_advertisement(advertisement):
                 update_room_state(reading)
                 (id,config)=configStore.get_sensor_config(reading.sensor_id)
                 if not config:
-                    print(f"[{logtime()}] could not find config for sensor {reading.sensor_id}")
                     return
                 asyncio.run(handle_reading(reading,config))
 

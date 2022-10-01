@@ -10,7 +10,7 @@ class ConfigStore:
 
     def create_default_for(self,reading):
         newSC=models.SensorConfiguration(
-            sensor_id=str(reading['sensor_id']), 
+            sensor_id=str(reading.sensor_id), 
             temp=float(20.0), 
             service_type=str(ServiceTypes.Off.value), 
             name=str("New sensor"), 

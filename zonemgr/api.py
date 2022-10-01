@@ -5,7 +5,7 @@ from zonemgr.services.plug_db_service import PlugService
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.db import ZoneManagerDB
-from discover import discover
+#from discover import discover
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()

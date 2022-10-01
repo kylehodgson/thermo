@@ -14,12 +14,14 @@ class SmartPlug:
     
     def update(self):
         if self.type == SmartPlugType.KASA:
-             self.provider = KasaSmartPlugProvider
+             self.provider = KasaSmartPlugProvider()
+             print(f"have a kasa plug with config {self.config}")
              self.provider.update(self.config)
     
 class KasaSmartPlugProvider:
 
-    def update(self, config):
-        k = KasaPlugService(config)
-        k.update()
+    async def update(self, config):
+        print(f"updating kasa plug with plug {config.plug}")
+        k = KasaPlugService(config.plug)
+        await k.update()
         
