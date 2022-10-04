@@ -1,6 +1,6 @@
 import zonemgr.models as models
 from zonemgr.db import ZoneManagerDB
-from zonemgr.models import ServiceTypes
+from zonemgr.models import ServiceType
 
 class ConfigStore:
     zmdb: ZoneManagerDB
@@ -12,7 +12,7 @@ class ConfigStore:
         newSC=models.SensorConfiguration(
             sensor_id=str(reading.sensor_id), 
             temp=float(20.0), 
-            service_type=str(ServiceTypes.Off.value), 
+            service_type=str(ServiceType.Off.value), 
             name=str("New sensor"), 
             location=str("Unknown"),
             plug=str("10.0.0.0"))

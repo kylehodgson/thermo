@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import string
+from dataclasses import dataclass
+from enum import Enum
 import time
 import os
 import sys
@@ -8,7 +9,7 @@ import datetime
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.db import ZoneManagerDB
-from zonemgr.models import SensorConfiguration, TemperatureReading, ServiceTypes
+from zonemgr.models import SensorConfiguration, TemperatureReading, ServiceType
 #from thermostat.smartplug import SmartPlug
 import kasa
 import bleson
@@ -47,80 +48,122 @@ zmdb=ZoneManagerDB()
 tempStore=TempReadingStore(zmdb)
 configStore=ConfigStore(zmdb)
 
-def schedule_off():
+def get_schedule_off():
     now = datetime.datetime.now()
     if now.hour > SCHEDULE_STOP and now.hour < SCHEDULE_START:
         return True
     return False
 
-def update_room_state(reading):
-    (id,currentConfig)=configStore.get_sensor_config(reading.sensor_id)
-    tr = TemperatureReading(battery=reading.battery, temp=reading.temp, humidity=reading.humidity, sensor_id=reading.sensor_id)
-    tempStore.save_if_newer(tr,TEMPERATURE_RECORD_STEP)
-    return
+async def handle_reading(reading: TemperatureReading, config: SensorConfiguration):
+    try:
+        plugSvc=kasa.SmartPlug(config.plug)
+        await plugSvc.update()
+    except Exception as err:
+        print(f"[{log_time()}] trouble connecting to plug {config.plug} in location {config.location} : {err} {type(err)}")
+        return
+    
+    panelState=get_panel_state_from(plugSvc)
+    ecoMode=get_eco_mode()
+    scheduleOff=get_schedule_off()
+    decision = get_decision_from(DecisionContext(
+        panelState,
+        serviceType=config.service_type,
+        scheduleOff=scheduleOff,
+        readingTemp=reading.temp,
+        configTemp=config.temp,
+        allowableDrift=ACCEPTABLE_DRIFT,
+        ecoMode=ecoMode,
+        ecoReduction=ECO_REDUCTION
+        ))
+    if decision==PanelDecision.DO_NOTHING:
+        return
+    if decision==PanelDecision.TURN_OFF:
+        await plugSvc.turn_off()
+        return
+    if decision==PanelDecision.TURN_ON:
+        await plugSvc.turn_on()
+        return
 
+class EcoMode(Enum):
+    ENABLED = 1
+    DISABLED = 0
+
+class PanelState(Enum):
+    ON = 1
+    OFF = 0
+
+class PanelDecision(Enum):
+    DO_NOTHING = 0
+    TURN_ON = 1
+    TURN_OFF = 2
+
+@dataclass(frozen=True)
+class DecisionContext:
+    panelState: PanelState
+    serviceType: ServiceType
+    scheduleOff: bool
+    readingTemp: float
+    configTemp: float
+    allowableDrift: float
+    ecoMode: EcoMode
+    ecoReduction: float
+
+def get_eco_mode() -> EcoMode:
+    moer=get_moer()
+    if moer>MAXMOER:
+        return EcoMode.ENABLED
+    return EcoMode.DISABLED
+
+def get_panel_state_from(plugSvc) -> PanelState:
+    if plugSvc.is_off: 
+        return PanelState.OFF
+    if plugSvc.is_on:
+        return PanelState.ON
+
+def get_decision_from(context: DecisionContext) -> PanelDecision:
+    ## figure out if we should be off based on service type.
+    if context.serviceType==ServiceType.Off and context.panelState.OFF:
+        return PanelDecision.DO_NOTHING
+    if context.serviceType==ServiceType.Off and context.panelState.ON:
+        return PanelDecision.TURN_OFF
+
+    if context.serviceType==ServiceType.Scheduled and context.scheduleOff and context.panelState.OFF:
+        return PanelDecision.DO_NOTHING
+    if context.serviceType==ServiceType.Scheduled and context.scheduleOff and context.panelState.ON:
+        return PanelDecision.TURN_OFF
+
+    if(context.ecoMode == EcoMode.ENABLED):
+        ecoFactor=context.ecoReduction
+    else:
+        ecoFactor=float(0)    
+
+    if context.panelState == PanelState.OFF and context.readingTemp < context.configTemp - context.allowableDrift - ecoFactor  :
+        print(f"[{log_time()}] temp {context.readingTemp} in room {context.configTemp} is unacceptably cool, turning on panel")
+        return PanelDecision.TURN_ON
+    if context.panelState == PanelState.ON and context.readingTemp > context.configTemp + context.allowableDrift - ecoFactor :
+        print(f"[{log_time()}] temp {context.readingTemp} in room {context.configTemp} is unacceptably warm, turning off panel")
+        return PanelDecision.TURN_OFF
+    print(f"[{log_time()}] fell through decision matrix with context {context}, returning DONOTHING.")
+    return PanelDecision.DO_NOTHING
+
+def get_moer() -> int:
+    wt=WattTimeAPI.WattTime(WATTTIMEUSERNAME,WATTTIMEPASSWORD)
+    BA=json.loads(wt.getBA(LATT,LONG))['abbrev']
+    moer=json.loads(wt.getIndex(BA))['percent']
+    print(f"[{log_time()}] moer : {moer}")
+    return int(moer)
+
+### BOTH ###
+def log_time() -> str:
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+### MAIN ###
 def too_soon() -> bool:
     global last_reading_time ## perhaps we ought to be a class so that we dont need globals.
     this_reading_time = int(time.time())
     elapsed = this_reading_time - last_reading_time
     last_reading_time=this_reading_time
     return elapsed < CHECK_INTERVAL
-
-def logtime() -> str:
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-async def handle_reading(reading: TemperatureReading, config: SensorConfiguration):
-    try:
-        plugSvc=kasa.SmartPlug(config.plug)
-        await plugSvc.update()
-    except BaseException as err:
-        print(f"[{logtime()}] trouble connecting to plug {config.plug} in location {config.location} : {err} {type(err)}")
-        return
-    
-    moer=get_moer()
-
-    # if the sensor is configured to be turned off, make sure it is off
-    if config.service_type == ServiceTypes.Off and plugSvc.is_off:
-        return
-    if config.service_type == ServiceTypes.Off  and plugSvc.is_on:
-        print(f"[{logtime()}] panel in room {config.location} on and should be off, turning it off")
-        await plugSvc.turn_off()
-        return
-
-    # if the sensors schedule indicates the panel should be turned off, make sure it is off
-    if config.service_type == ServiceTypes.Scheduled and schedule_off() and plugSvc.is_off:
-        return
-    if config.service_type== ServiceTypes.Scheduled and schedule_off() and plugSvc.is_on:
-        print(f"[{logtime()}] panel in room {config.location} on off schedule; turning it off")
-        await plugSvc.turn_off()
-        return
-
-    # sensor enabled, check if temperature is in range, and enable eco mode if moer is greater than max
-    if moer>MAXMOER:
-        print(f"Current MOER is greater than max; setting eco mode") # will let temps fall to double the usual drift, and will stop heating at once when temp has been reached
-        if plugSvc.is_off and float(reading.temp) < config.temp - ACCEPTABLE_DRIFT - ECO_REDUCTION  :
-            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
-            await plugSvc.turn_on()
-        if plugSvc.is_on and float(reading.temp) > config.temp + ACCEPTABLE_DRIFT - ECO_REDUCTION :
-            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
-            await plugSvc.turn_off()
-    else:
-        if plugSvc.is_off and float(reading.temp) < config.temp - float(ACCEPTABLE_DRIFT) :
-            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably cool, turning on panel")
-            await plugSvc.turn_on()
-        if plugSvc.is_on and float(reading.temp) > config.temp + float(ACCEPTABLE_DRIFT) :
-            print(f"[{logtime()}] temp {reading.temp} in room {config.location} is unacceptably warm, turning off panel")
-            await plugSvc.turn_off()
-
-    
-
-def get_moer() -> int:
-    wt=WattTimeAPI.WattTime(WATTTIMEUSERNAME,WATTTIMEPASSWORD)
-    BA=json.loads(wt.getBA(LATT,LONG))['abbrev']
-    moer=json.loads(wt.getIndex(BA))['percent']
-    print(f"[{logtime()}] moer : {moer}")
-    return int(moer)
-
 
 def on_advertisement(advertisement):
     GOVEE_BT_MAC_OUI_PREFIX = "A4:C1:38"
@@ -130,9 +173,9 @@ def on_advertisement(advertisement):
         if H5075_UPDATE_UUID16 in advertisement.uuid16s:
             reading = GoveeSensorsDiscovery.reading_from_advertisement(advertisement)
             if not too_soon():
-                print(f"[{logtime()}] sensor_id: {reading.sensor_id} temp: {reading.temp} humidity: {reading.humidity} battery: {reading.battery}")
-                update_room_state(reading)
+                print(f"[{log_time()}] sensor_id: {reading.sensor_id} temp: {reading.temp} humidity: {reading.humidity} battery: {reading.battery}")
                 (id,config)=configStore.get_sensor_config(reading.sensor_id)
+                tempStore.save_if_newer(reading,TEMPERATURE_RECORD_STEP)
                 if not config:
                     return
                 asyncio.run(handle_reading(reading,config))
