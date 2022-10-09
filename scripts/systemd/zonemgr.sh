@@ -4,7 +4,8 @@ pidfile="/run/thermo/zonemgr.pid"
 logfile="/var/log/thermo/zonemgr.log"
 
 function start_service {
-    echo starting zonemanager... >> $logfile 2>&1
+    echo "" >> $logfile 2>&1
+    echo "starting zonemanager..." >> $logfile 2>&1
     cd /home/pi/projects/thermo
     . venv/bin/activate
     . .env

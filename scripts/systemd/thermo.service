@@ -1,5 +1,5 @@
 [Unit]
-Description=Thermo service
+Description=Thermo thermostat service
 DefaultDependencies=no
 After=network.target
 

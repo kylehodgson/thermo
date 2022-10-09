@@ -14,24 +14,41 @@ rundir=/var/run/thermo
 user=thermo
 group=thermo
 
-groupadd -f $group
-useradd -d $srcdir -g $group -s /bin/sbin/nologin $user
+function makeDirectoryFor () 
+{
+  dir=$1
+  user=$2
+  group=$3
 
-mkdir -p $libdir
-chown -R $user $libdir
-chgrp -R $group $libdir
+  echo "Creating $dir and setting permissions for user $user group $group..."
+  mkdir -p $dir
+  chown -R $user $dir
+  chgrp -R $group $dir
+}
 
-mkdir -p $logdir
-chown $user $logdir
-chgrp $group $logdir
+uid=$(id -u $user)
+if [ -z $uid ]
+then
+  useradd -d $srcdir -g $group -s /bin/sbin/nologin $user
+else
+  echo "Skipping useradd, user $user already existed with id $uid"
+fi
 
-mkdir -p $rundir
-chown $user $rundir
-chgrp $group $rundir
+gid=$(id -u $group)
+if [ -z $gid ]
+then
+  groupadd -f $group
+else
+  echo "Skipping groupadd, group $group already existed with id $gid"
+fi
+
+makeDirectoryFor $libdir $user $group
+makeDirectoryFor $logdir $user $group
+makeDirectoryFor $rundir $user $group
 
 cp $srcdir/scripts/systemd/thermo.sh $libdir
 cp $srcdir/scripts/systemd/zonemgr.sh $libdir
 cp $srcdir/scripts/systemd/thermo.service $systemdir
 cp $srcdir/scripts/systemd/zonemgr.service $systemdir
 
-
+systemctl daemon-reload

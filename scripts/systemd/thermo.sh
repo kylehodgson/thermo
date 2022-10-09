@@ -5,7 +5,7 @@ logfile="/var/log/thermo/thermo.log"
 
 function start_service {
     echo "" >> $logfile 2>&1
-    echo "starting thermo service" >> $logfile 2>&1
+    echo "starting thermo service..." >> $logfile 2>&1
     cd /home/pi/projects/thermo
     . venv/bin/activate
     . .env
