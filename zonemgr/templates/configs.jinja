@@ -5,20 +5,27 @@
 				<div class="row">
 					<div class="col">
 					<img  width="30" src="http://pizero.local/images/smokestack.png">
-					<span style="vertical-align:bottom;" hx-trigger="every 30s" hx-get="/moer-hx/" hx-target="#moer_span" hx-swap="outerHtml">MOER: <span id="moer_span" ></span></span>
+					<span 
+						style="vertical-align:bottom;" 
+						hx-trigger="load" 
+						hx-get="/moer-hx/" 
+						hx-target="#moer_span" 
+						hx-swap="outerHtml">
+						<a href='https://www.watttime.org/api-documentation/#introduction'>MOER</a> index:
+						<span id="moer_span" ></span>
+					</span>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div>
-			<div class="min-w-80" >
-				{% for sensor in config %}
+		<div class="row">
+		{% for sensor in config %}
+				<div class="card"><!-- style="min-width: 25rem;" -->
 				<form>
 				<input 
 					type="hidden" 
 					name="sensor_id" 
 					value="{{sensor['sensor_id']}}">
-				<div class="card"><!-- style="min-width: 25rem;" -->
 					<div class="card-body">
 						<h5 class="card-title">{{sensor['location']}}: <span 
 							hx-trigger="load" 
@@ -131,7 +138,7 @@
 					</div>
 				</div>
 				</form>
-				{% endfor %}
+	{% endfor %}
 			</div>
 		</div>
 
