@@ -20,127 +20,126 @@
 		</div>
 		<div class="row">
 		{% for sensor in config %}
-				<div class="card"><!-- style="min-width: 25rem;" -->
+			<div class="card"><!-- style="min-width: 25rem;" -->
 				<form>
 				<input 
 					type="hidden" 
 					name="sensor_id" 
 					value="{{sensor['sensor_id']}}">
-					<div class="card-body">
-						<h5 class="card-title">{{sensor['location']}}: <span 
-							hx-trigger="load" 
-							hx-get="/conditions-hx/{{sensor['sensor_id']}}" 
-							hx-target="#current_temp_{{sensor['sensor_id']}}"  
-							id="current_temp_{{sensor['sensor_id']}}"></span></h5>
-						<div class="input-group">
-							<input 
-								class="form-control-lg" 
-								type="text" 
-								id="temp-{{sensor['sensor_id']}}" 
-								size="4" 
-								name="temp" 
-								value="{{sensor['temp']}}">
-							<span class="input-group-text">° C</span>
-							<button 
-								type="button" 
-								class="btn btn-primary btn-lg" 
-								hx-post="/config-hx/" 
-								hx-target="#showall" 
-								hx-swap="outerHTML">Save</button>
-							&nbsp;<img height="55" src="http://pizero.local/images/heating.png">
-							&nbsp;<img height="55" src="http://pizero.local/images/ecomode.png">
-						</div>
-						{% if sensor.service_type=="scheduled" %}
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-scheduled" 
-									name="service_type" 
-									value="scheduled" checked>
-								<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
-							</div>
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-on" 
-									name="service_type" 
-									value="on">
-								<label class="form-check-label" for="service_type-on">On</label>
-							</div>
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-off" 
-									name="service_type" 
-									value="off">
-								<label class="form-check-label" for="service_type-off">Off</label>
-							</div>
-						{% elif sensor.service_type=="on"  %}
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-scheduled" 
-									name="service_type" 
-									value="scheduled">
-								<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
-							</div>
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-on" 
-									name="service_type" 
-									value="on" checked>
-								<label class="form-check-label" for="service_type-on">On</label>
-							</div>
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-off" 
-									name="service_type" 
-									value="off">
-							<label class="form-check-label" for="service_type-off">Off</label>
-							</div>
-						{% else %}
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-scheduled" 
-									name="service_type" 
-									value="scheduled">
-								<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
-								</div>
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-on" 
-									name="service_type" 
-									value="on">
-								<label class="form-check-label" for="service_type-on">On</label>
-							</div>
-							<div class="form-check">
-								<input 
-									class="form-check-input" 
-									type="radio" 
-									id="service_type-off" 
-									name="service_type" 
-									value="off" checked>
-								<label class="form-check-label" for="service_type-off">Off</label>
-							</div>
-						{% endif %}
+				<div class="card-body">
+					<h5 class="card-title">{{sensor['location']}}: <span 
+						hx-trigger="load" 
+						hx-get="/conditions-hx/{{sensor['sensor_id']}}" 
+						hx-target="#current_temp_{{sensor['sensor_id']}}"  
+						id="current_temp_{{sensor['sensor_id']}}"></span></h5>
+					<div class="input-group">
+						<input 
+							class="form-control-lg" 
+							type="text" 
+							id="temp-{{sensor['sensor_id']}}" 
+							size="4" 
+							name="temp" 
+							value="{{sensor['temp']}}">
+						<span class="input-group-text">° C</span>
+						<button 
+							type="button" 
+							class="btn btn-primary btn-lg" 
+							hx-post="/config-hx/" 
+							hx-target="#showall" 
+							hx-swap="outerHTML">Save</button>
+						&nbsp;<img height="55" src="http://pizero.local/images/heating.png">
+						&nbsp;<img height="55" src="http://pizero.local/images/ecomode.png">
 					</div>
-				</div>
+					{% if sensor.service_type=="scheduled" %}
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-scheduled" 
+								name="service_type" 
+								value="scheduled" checked>
+							<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
+						</div>
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-on" 
+								name="service_type" 
+								value="on">
+							<label class="form-check-label" for="service_type-on">On</label>
+						</div>
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-off" 
+								name="service_type" 
+								value="off">
+							<label class="form-check-label" for="service_type-off">Off</label>
+						</div>
+					{% elif sensor.service_type=="on"  %}
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-scheduled" 
+								name="service_type" 
+								value="scheduled">
+							<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
+						</div>
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-on" 
+								name="service_type" 
+								value="on" checked>
+							<label class="form-check-label" for="service_type-on">On</label>
+						</div>
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-off" 
+								name="service_type" 
+								value="off">
+						<label class="form-check-label" for="service_type-off">Off</label>
+						</div>
+					{% else %}
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-scheduled" 
+								name="service_type" 
+								value="scheduled">
+							<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
+							</div>
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-on" 
+								name="service_type" 
+								value="on">
+							<label class="form-check-label" for="service_type-on">On</label>
+						</div>
+						<div class="form-check">
+							<input 
+								class="form-check-input" 
+								type="radio" 
+								id="service_type-off" 
+								name="service_type" 
+								value="off" checked>
+							<label class="form-check-label" for="service_type-off">Off</label>
+						</div>
+					{% endif %}
+				</div><!-- /card-body -->
 				</form>
-	{% endfor %}
-			</div>
-		</div>
+			</div><!-- /card -->
+		{% endfor %}
+		</div><!-- /row -->
+	</div><!-- /container -->
+</div><!-- /sensors -->
 
-	</div>
-</div>
