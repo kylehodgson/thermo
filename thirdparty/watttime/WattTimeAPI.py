@@ -1,7 +1,9 @@
+from codecs import getincrementaldecoder
 from decimal import InvalidOperation
 import string
 import requests
 from requests.auth import HTTPBasicAuth
+import json
 
 class WattTime:
     token=""
@@ -17,6 +19,12 @@ class WattTime:
         params = {'ba': '{}'.format(ba)}
         rsp=requests.get(index_url, headers=headers, params=params)
         return rsp.text
+
+    def get_index_json(self,ba):
+        rsp=self.getIndex(ba)
+        formatted=json.loads(rsp)
+        return formatted
+
 
     def getBA(self, latt, long)->string:
         if self.token=="":
