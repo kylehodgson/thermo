@@ -26,6 +26,14 @@ function makeDirectoryFor ()
   chgrp -R $group $dir
 }
 
+function installScripts()
+{
+  svcname=$1
+  echo "Installing start script and service file for $svcname..."
+  cp $srcdir/scripts/systemd/$svcname.sh $libdir
+  cp $srcdir/scripts/systemd/$svcname.service $systemdir
+}
+
 uid=$(id -u $user)
 if [ -z $uid ]
 then
@@ -46,9 +54,14 @@ makeDirectoryFor $libdir $user $group
 makeDirectoryFor $logdir $user $group
 makeDirectoryFor $rundir $user $group
 
-cp $srcdir/scripts/systemd/thermo.sh $libdir
-cp $srcdir/scripts/systemd/zonemgr.sh $libdir
-cp $srcdir/scripts/systemd/thermo.service $systemdir
-cp $srcdir/scripts/systemd/zonemgr.service $systemdir
+installScripts thermo
+installScripts zonemgr
+installScripts moer
 
+echo "reloading systemd configs..."
 systemctl daemon-reload
+
+echo "restarting services..."
+systemctl restart moer
+systemctl restart thermo
+systemctl restart zonemgr

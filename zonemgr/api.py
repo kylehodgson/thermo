@@ -67,12 +67,14 @@ async def getConditions(sensor_id: str):
 
 @app.get("/config-hx/", response_class=HTMLResponse)
 async def getConfig(request: Request):
-    return templates.TemplateResponse("configs.jinja", {"request": request, "config": configsvc.load_config()})
+    (moer,reading_time) = moersvc.select_latest_moer_reading(moersvc.get_local_ba_id())
+    return templates.TemplateResponse("configs.jinja", {"request": request, "config": configsvc.load_config(), "moer": moer})
 
 @app.post("/config-hx/", response_class=HTMLResponse)
 async def setConfig(request: Request, sensor_id: str = Form("sensor_id"), temp: str = Form("temp"), service_type: str = Form("service_type")):
     sc = configsvc.set_sensor_config(sensor_id, float(temp), service_type) 
-    return templates.TemplateResponse("configs.jinja", {"request": request, "config": configsvc.load_config()})
+    (moer,reading_time) = moersvc.select_latest_moer_reading(moersvc.get_local_ba_id())
+    return templates.TemplateResponse("configs.jinja", {"request": request, "config": configsvc.load_config(), "moer": moer})
 
 @app.get("/conditions-hx/{sensor_id}", response_class=HTMLResponse)
 async def getConditionsFor(request: Request, sensor_id: str):

@@ -1,145 +1,83 @@
 <div id="sensors" hx-trigger="every 60s"  hx-get="/config-hx/" hx-target="#sensors" hx-swap="outerHTML">
-	<div class="container w-90 p-3" id="showall">
-		<div class="row">
-			<div class="col-md-6">
-				<div class="row">
-					<div class="col">
-					<img  width="30" src="http://pizero.local/images/smokestack.png">
-					<span 
-						style="vertical-align:bottom;" 
-						hx-trigger="load" 
-						hx-get="/moer-hx/" 
-						hx-target="#moer_span" 
-						hx-swap="outerHtml">
-						<a href='https://www.watttime.org/api-documentation/#introduction'>MOER</a> index:
-						<span id="moer_span" ></span>
-					</span>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="row">
-		{% for sensor in config %}
-			<div class="card"><!-- style="min-width: 25rem;" -->
-				<form>
-				<input 
-					type="hidden" 
-					name="sensor_id" 
-					value="{{sensor['sensor_id']}}">
-				<div class="card-body">
-					<h5 class="card-title">{{sensor['location']}}: <span 
-						hx-trigger="load" 
-						hx-get="/conditions-hx/{{sensor['sensor_id']}}" 
-						hx-target="#current_temp_{{sensor['sensor_id']}}"  
-						id="current_temp_{{sensor['sensor_id']}}"></span></h5>
-					<div class="input-group">
-						<input 
-							class="form-control-lg" 
-							type="text" 
-							id="temp-{{sensor['sensor_id']}}" 
-							size="4" 
-							name="temp" 
-							value="{{sensor['temp']}}">
-						<span class="input-group-text">° C</span>
-						<button 
-							type="button" 
-							class="btn btn-primary btn-lg" 
-							hx-post="/config-hx/" 
-							hx-target="#showall" 
-							hx-swap="outerHTML">Save</button>
-						&nbsp;<img height="55" src="http://pizero.local/images/heating.png">
-						&nbsp;<img height="55" src="http://pizero.local/images/ecomode.png">
-					</div>
-					{% if sensor.service_type=="scheduled" %}
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-scheduled" 
-								name="service_type" 
-								value="scheduled" checked>
-							<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
-						</div>
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-on" 
-								name="service_type" 
-								value="on">
-							<label class="form-check-label" for="service_type-on">On</label>
-						</div>
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-off" 
-								name="service_type" 
-								value="off">
-							<label class="form-check-label" for="service_type-off">Off</label>
-						</div>
-					{% elif sensor.service_type=="on"  %}
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-scheduled" 
-								name="service_type" 
-								value="scheduled">
-							<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
-						</div>
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-on" 
-								name="service_type" 
-								value="on" checked>
-							<label class="form-check-label" for="service_type-on">On</label>
-						</div>
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-off" 
-								name="service_type" 
-								value="off">
-						<label class="form-check-label" for="service_type-off">Off</label>
-						</div>
+<div id="showall">
+	<div class="row">
+		<div class="col">
+			<img  width="30" src="http://pizero.local/images/smokestack.png">
+			<span><a href='https://www.watttime.org/api-documentation/#introduction'>MOER</a> index: {{moer.percent}} %</span>
+		</div>					
+	</div>
+	<div class="row">
+	{% for sensor in config %}
+		<div class="card" style="width: 30rem;">
+			<form>
+			<input 
+				type="hidden" 
+				name="sensor_id" 
+				value="{{sensor['sensor_id']}}">
+			<div class="card-body">
+				<h4 class="card-title">{{sensor['location']}}: <span 
+					hx-trigger="load" 
+					hx-get="/conditions-hx/{{sensor['sensor_id']}}" 
+					hx-target="#current_temp_{{sensor['sensor_id']}}"  
+					id="current_temp_{{sensor['sensor_id']}}"></span></h4>
+				<div class="input-group">
+					<input 
+						class="form-control-lg" 
+						type="text" 
+						id="temp-{{sensor['sensor_id']}}" 
+						size="4" 
+						name="temp" 
+						value="{{sensor['temp']}}">
+					<span class="input-group-text">° C</span>
+					<button 
+						type="button" 
+						class="btn btn-primary btn-lg" 
+						hx-post="/config-hx/" 
+						hx-target="#showall" 
+						hx-swap="outerHTML">Save</button>
+					{% if sensor.service_type=="off" %}
+						&nbsp;<img height="55" src="http://pizero.local/images/heating_off.png">
 					{% else %}
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-scheduled" 
-								name="service_type" 
-								value="scheduled">
-							<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
-							</div>
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-on" 
-								name="service_type" 
-								value="on">
-							<label class="form-check-label" for="service_type-on">On</label>
-						</div>
-						<div class="form-check">
-							<input 
-								class="form-check-input" 
-								type="radio" 
-								id="service_type-off" 
-								name="service_type" 
-								value="off" checked>
-							<label class="form-check-label" for="service_type-off">Off</label>
-						</div>
+						&nbsp;<img height="55" src="http://pizero.local/images/heating.png"> 
 					{% endif %}
-				</div><!-- /card-body -->
-				</form>
-			</div><!-- /card -->
-		{% endfor %}
-		</div><!-- /row -->
-	</div><!-- /container -->
+					{% if moer.percent > 50 %}
+						&nbsp;<img height="55" src="http://pizero.local/images/ecomode.png">
+					{% else %}
+						&nbsp;<img height="55" src="http://pizero.local/images/ecomode_off.png">
+					{% endif %}
+				</div>
+				<div class="form-check">
+					<input 
+						class="form-check-input" 
+						type="radio" 
+						id="service_type-scheduled" 
+						name="service_type" 
+						value="scheduled" {% if sensor.service_type=="scheduled" %}checked{% endif %} >
+					<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
+				</div>
+				<div class="form-check">
+					<input 
+						class="form-check-input" 
+						type="radio" 
+						id="service_type-on" 
+						name="service_type" 
+						value="on" {% if sensor.service_type=="on" %}checked{% endif %}>
+					<label class="form-check-label" for="service_type-on">On</label>
+				</div>
+				<div class="form-check">
+					<input 
+						class="form-check-input" 
+						type="radio" 
+						id="service_type-off" 
+						name="service_type" 
+						value="off" {% if sensor.service_type=="off" %}checked{% endif %}>
+					<label class="form-check-label" for="service_type-off">Off</label>
+				</div>
+			</div><!-- /card-body -->
+			</form>
+		</div><!-- /card -->
+	{% endfor %}
+	</div><!-- /row -->
+</div><!-- showall -->
 </div><!-- /sensors -->
 

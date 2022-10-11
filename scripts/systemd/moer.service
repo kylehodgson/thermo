@@ -1,0 +1,12 @@
+[Unit]
+Description=Thermo moer service
+DefaultDependencies=no
+After=network.target
+
+[Service]
+Type=forking
+User=thermo
+Group=thermo
+ExecStart=/usr/local/lib/thermo/moer.sh start
+PIDFile=thermo/moer.pid
+
