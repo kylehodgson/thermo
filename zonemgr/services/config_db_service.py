@@ -1,6 +1,7 @@
+from typing import List, Tuple
 import zonemgr.models as models
 from zonemgr.db import ZoneManagerDB
-from zonemgr.models import ServiceType
+from zonemgr.models import SensorConfiguration
 
 class ConfigStore:
     zmdb: ZoneManagerDB
@@ -8,19 +9,8 @@ class ConfigStore:
     def __init__(self, zmdb: ZoneManagerDB) -> None:
         self.zmdb=zmdb
 
-    def create_default_for(self,reading):
-        newSC=models.SensorConfiguration(
-            sensor_id=str(reading.sensor_id), 
-            temp=float(20.0), 
-            service_type=str(ServiceType.Off.value), 
-            name=str("New sensor"), 
-            location=str("Unknown"),
-            plug=str("10.0.0.0"))
-        self.save(newSC)
-
     def save(self,sc):
         id,sc_record=self.get_sensor_config(sc.sensor_id)
-
         with self.zmdb as conn: # reading values from environment
             with conn.cursor() as cursor:
                 if sc_record:
@@ -34,7 +24,7 @@ class ConfigStore:
                 conn.commit()
         return id
 
-    def get_sensor_config(self,sensor: str):
+    def get_sensor_config(self,sensor: str) -> Tuple[int,SensorConfiguration]:
         criteria="""{"sensor_id": "%s"}""" % sensor
         with self.zmdb as conn:
             with conn.cursor() as cursor:
@@ -47,7 +37,7 @@ class ConfigStore:
                 else:
                     return (0, False)
 
-    def get_all_sensor_configs(self):
+    def get_all_sensor_configs(self) -> List[SensorConfiguration]:
         config=[]
         with self.zmdb as conn:
             with conn.cursor() as cursor:
@@ -60,7 +50,6 @@ class ConfigStore:
         return self.get_all_sensor_configs()
 
     def set_sensor_config(self, sensor_id: str, temp: float, service_type: str, name: str="", location: str="", plug=""):
-        print(f"sensor_id {sensor_id} temp {temp} service_type {service_type} name {name} location {location} plug {plug}")
         sc=models.SensorConfiguration(sensor_id=sensor_id, temp=temp, service_type=service_type)
         if name!="":
             sc.name=name

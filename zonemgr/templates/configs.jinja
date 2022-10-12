@@ -15,11 +15,7 @@
 				name="sensor_id" 
 				value="{{sensor['sensor_id']}}">
 			<div class="card-body">
-				<h4 class="card-title">{{sensor['location']}}: <span 
-					hx-trigger="load" 
-					hx-get="/conditions-hx/{{sensor['sensor_id']}}" 
-					hx-target="#current_temp_{{sensor['sensor_id']}}"  
-					id="current_temp_{{sensor['sensor_id']}}"></span></h4>
+				<h4 class="card-title">{{sensor['location']}}: {{sensor_conditions[sensor['sensor_id']].temp}}</h4>
 				<div class="input-group">
 					<input 
 						class="form-control-lg" 

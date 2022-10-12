@@ -30,8 +30,7 @@ class MoerReadingStore:
                     record=cursor.fetchone()
                     (reading,timestamp)=record
                     mr = MoerReading.parse_obj(reading)
-                    print(f"reading: {reading}")
-                    return (mr, timestamp)
+                    return mr
                 else:
                     return (False, False)
 
