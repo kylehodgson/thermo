@@ -21,7 +21,7 @@ class MoerReadingStore:
                                  (reading.json(), seconds_elapsed, reading.ba_id))
                 conn.commit()
 
-    def select_latest_moer_reading(self,ba_id: str):
+    def select_latest_moer_reading(self,ba_id: str) -> MoerReading:
         criteria="""{"ba_id": "%s"}""" % ba_id
         with self.zmdb as conn:
             with conn.cursor() as cursor:
@@ -29,6 +29,4 @@ class MoerReadingStore:
                 if cursor.rowcount>0:
                     (reading,)=cursor.fetchone()
                     return MoerReading.parse_obj(reading)
-                else:
-                    return (False, False)
 
