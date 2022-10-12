@@ -25,12 +25,10 @@ class MoerReadingStore:
         criteria="""{"ba_id": "%s"}""" % ba_id
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select reading, reading_time from public.moer_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""" , (criteria, ))
+                cursor.execute("""select reading from public.moer_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""" , (criteria, ))
                 if cursor.rowcount>0:
-                    record=cursor.fetchone()
-                    (reading,timestamp)=record
-                    mr = MoerReading.parse_obj(reading)
-                    return mr
+                    (reading,)=cursor.fetchone()
+                    return MoerReading.parse_obj(reading)
                 else:
                     return (False, False)
 
