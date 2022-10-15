@@ -4,9 +4,9 @@ from typing import Optional
 from enum import Enum
 
 class ServiceType(Enum):
-    Scheduled="Scheduled"
-    On="On"
-    Off="Off"
+    SCHEDULED=1
+    ON=2
+    OFF=3
 
 class SensorConfiguration(BaseModel):
     sensor_id: str

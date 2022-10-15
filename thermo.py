@@ -8,6 +8,7 @@ import asyncio
 import datetime
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
+from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import SensorConfiguration, TemperatureReading, ServiceType
 #from thermostat.smartplug import SmartPlug
@@ -16,7 +17,7 @@ import bleson
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, ERROR, DEBUG, INFO
 from discover.goveesensors import GoveeSensorsDiscovery
-from thirdparty.watttime import WattTimeAPI
+
 import json
 
 ## if ble advertisements with temperature readings are appearing faster than this rate, ignore them 
@@ -47,6 +48,7 @@ last_reading_time=int(time.time()) - (CHECK_INTERVAL * 2)
 zmdb=ZoneManagerDB()
 tempStore=TempReadingStore(zmdb)
 configStore=ConfigStore(zmdb)
+moerStore=MoerReadingStore(zmdb)
 
 def get_schedule_off():
     now = datetime.datetime.now()
@@ -66,8 +68,8 @@ async def handle_reading(reading: TemperatureReading, config: SensorConfiguratio
     ecoMode=get_eco_mode()
     scheduleOff=get_schedule_off()
     decision = get_decision_from(DecisionContext(
-        panelState,
-        serviceType=config.service_type,
+        panelState=DecisionContext.get_panel_state(panelState.name),
+        serviceType=DecisionContext.get_service_type(config.service_type),
         scheduleOff=scheduleOff,
         readingTemp=reading.temp,
         configTemp=config.temp,
@@ -108,6 +110,22 @@ class DecisionContext:
     ecoMode: EcoMode
     ecoReduction: float
 
+    def get_panel_state(value: str) -> PanelState:
+        if str(PanelState.OFF.name).lower() == value.lower():
+            return PanelState.OFF
+        if str(PanelState.ON.name).lower() == value.lower():
+            return PanelState.ON
+        raise Exception(f"Value {value} is not a valid PanelState.")
+
+    def get_service_type(value: str) -> ServiceType: 
+        if str(ServiceType.SCHEDULED.name).lower() == value.lower():
+            return ServiceType.SCHEDULED
+        if str(ServiceType.OFF.name).lower() == value.lower():
+            return ServiceType.OFF
+        if str(ServiceType.ON.name).lower() == value.lower():
+            return ServiceType.ON
+        raise Exception(f"Value {value} is not a valid ServiceType.")
+
 def get_eco_mode() -> EcoMode:
     moer=get_moer()
     if moer>MAXMOER:
@@ -122,36 +140,39 @@ def get_panel_state_from(plugSvc) -> PanelState:
 
 def get_decision_from(context: DecisionContext) -> PanelDecision:
     ## figure out if we should be off based on service type.
-    if context.serviceType==ServiceType.Off and context.panelState.OFF:
+    if context.serviceType==ServiceType.OFF and context.panelState.OFF:
         return PanelDecision.DO_NOTHING
-    if context.serviceType==ServiceType.Off and context.panelState.ON:
+    if context.serviceType==ServiceType.OFF and context.panelState.ON:
+        return PanelDecision.TURN_OFF
+    
+    #figrue out if we should be off based on the schedule.
+    
+    if context.serviceType==ServiceType.SCHEDULED and context.scheduleOff and context.panelState==PanelState.OFF:
+        print(f"Service type set to: {context.serviceType} scehduleOff set to {context.scheduleOff} panel state is {context.panelState} so doing nothing." )
+        return PanelDecision.DO_NOTHING
+    if context.serviceType==ServiceType.SCHEDULED and context.scheduleOff and context.panelState==PanelState.ON:
+        print(f"Service type set to: {context.serviceType} scehduleOff set to {context.scheduleOff} panel state is {context.panelState} so turning it off." )
         return PanelDecision.TURN_OFF
 
-    if context.serviceType==ServiceType.Scheduled and context.scheduleOff and context.panelState.OFF:
-        return PanelDecision.DO_NOTHING
-    if context.serviceType==ServiceType.Scheduled and context.scheduleOff and context.panelState.ON:
-        return PanelDecision.TURN_OFF
-
+    #figure out if eco mode is enabled, and add an eco factor if so
     if(context.ecoMode == EcoMode.ENABLED):
         ecoFactor=context.ecoReduction
     else:
         ecoFactor=float(0)    
 
+    # be a normal thermostat
     if context.panelState == PanelState.OFF and context.readingTemp < context.configTemp - context.allowableDrift - ecoFactor  :
-        print(f"[{log_time()}] temp {context.readingTemp} in room {context.configTemp} is unacceptably cool, turning on panel")
+        print(f"[{log_time()}] temp {context.readingTemp} in room {context.configTemp} is unacceptably cool given ecoFactor {ecoFactor} and allowable drift {context.allowableDrift}, turning on panel")
         return PanelDecision.TURN_ON
     if context.panelState == PanelState.ON and context.readingTemp > context.configTemp + context.allowableDrift - ecoFactor :
-        print(f"[{log_time()}] temp {context.readingTemp} in room {context.configTemp} is unacceptably warm, turning off panel")
+        print(f"[{log_time()}] temp {context.readingTemp} in room set to {context.configTemp} is unacceptably warm given ecoFactor {ecoFactor} and allowable drift {context.allowableDrift}, turning off panel")
         return PanelDecision.TURN_OFF
-    print(f"[{log_time()}] fell through decision matrix with context {context}, returning DONOTHING.")
+
     return PanelDecision.DO_NOTHING
 
 def get_moer() -> int:
-    wt=WattTimeAPI.WattTime(WATTTIMEUSERNAME,WATTTIMEPASSWORD)
-    BA=json.loads(wt.getBA(LATT,LONG))['abbrev']
-    moer=json.loads(wt.getIndex(BA))['percent']
-    print(f"[{log_time()}] moer : {moer}")
-    return int(moer)
+    moer=moerStore.select_latest_moer_reading(moerStore.get_local_ba_id())
+    return int(moer.percent)
 
 ### BOTH ###
 def log_time() -> str:

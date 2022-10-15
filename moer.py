@@ -16,7 +16,7 @@ def update_moer():
     reading_json=wt.get_index_json(ba_id)
     #moer_reading=MoerReading.parse_obj(reading_json)
     moer_reading=MoerReadingFrom(reading_json)
-    moersvc.save_if_newer(moer_reading,10)
+    moersvc.save_if_newer(moer_reading)
 
 schedule.every(5).minutes.do(update_moer)
 while True:
