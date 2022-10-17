@@ -50,13 +50,21 @@ def get_multizone_view():
         "sensor_conditions": sensor_conditions}
             
 @app.post("/thermo-hx/", response_class=HTMLResponse)
-async def update_thermo_configuration(request: Request, sensor_id: str = Form("sensor_id"), temp: str = Form("temp"), service_type: str = Form("service_type"), name: str=Form("name"), location=Form("location")):
+async def update_thermo_configuration(
+    request: Request, 
+    sensor_id: str = Form("sensor_id"), 
+    temp: str = Form("temp"), 
+    service_type: str = Form("service_type"), 
+    name: str=Form("name"), 
+    location=Form("location"),
+    plug=Form("plug")):
     sc = configsvc.set_sensor_config(
         sensor_id=sensor_id, 
         temp=float(temp), 
         service_type=service_type, 
         name=name, 
-        location=location) 
+        location=location,
+        plug=plug) 
     return templates.TemplateResponse("redirect_home.jinja", {"request": request})
 
 @app.get("/config-edit-hx/{sensor_id}", response_class=HTMLResponse)

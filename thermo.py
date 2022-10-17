@@ -27,9 +27,9 @@ CHECK_INTERVAL = int(5)
 ## temperature before starting/stopping the heater
 ACCEPTABLE_DRIFT = float(1)
 ## integer of the hour to stop the system when its set to "schedule"
-SCHEDULE_STOP = 8
+SCHEDULE_STOP = 10
 ## integer of the hour to start the system when its set to "schedule"
-SCHEDULE_START = 22
+SCHEDULE_START = 21
 ## integer - the number of seconds that should pass before we write another record to the db
 ## for a given sensor
 TEMPERATURE_RECORD_STEP = 60 * 10
@@ -148,10 +148,8 @@ def get_decision_from(context: DecisionContext) -> PanelDecision:
     #figrue out if we should be off based on the schedule.
     
     if context.serviceType==ServiceType.SCHEDULED and context.scheduleOff and context.panelState==PanelState.OFF:
-        print(f"Service type set to: {context.serviceType} scehduleOff set to {context.scheduleOff} panel state is {context.panelState} so doing nothing." )
         return PanelDecision.DO_NOTHING
     if context.serviceType==ServiceType.SCHEDULED and context.scheduleOff and context.panelState==PanelState.ON:
-        print(f"Service type set to: {context.serviceType} scehduleOff set to {context.scheduleOff} panel state is {context.panelState} so turning it off." )
         return PanelDecision.TURN_OFF
 
     #figure out if eco mode is enabled, and add an eco factor if so
@@ -218,12 +216,12 @@ def main() -> int:
             observer.stop() # When I skip the sleep and stop, it forks to the background but doesn't work
     except KeyboardInterrupt:
         try:
+            print(f"[{log_time()}] Received keyboard interrupt, stopping.")
             observer.stop()
             sys.exit(0)
         except SystemExit:
             observer.stop()
             os._exit(0)
-
 
 if __name__ == '__main__':
     sys.exit(main())

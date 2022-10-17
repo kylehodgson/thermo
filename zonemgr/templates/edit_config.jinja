@@ -20,6 +20,10 @@
                         <input type="text" class="form-control" id="i_sensorlocation" value="{{sensor['location']}}" name="location">
                     </div> 
                     <div class="form-group">
+                        <label for="i_sensorlocation">Plug IP address</label>
+                        <input type="text" class="form-control" id="i_sensorlocation" value="{{sensor['plug']}}" name="location" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+                    </div> 
+                    <div class="form-group">
                         <label for="temp-{{sensor['sensor_id']}}">Desired temperature</label>
                         <div class="input-group">
                             <input class="form-control-lg" type="text" id="temp-{{sensor['sensor_id']}}" size="4" name="temp" value="{{sensor['temp']}}">
