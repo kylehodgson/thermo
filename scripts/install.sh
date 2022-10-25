@@ -9,7 +9,7 @@ srcdir=/home/pi/projects/thermo
 libdir=/usr/local/lib/thermo
 systemdir=/etc/systemd/system
 logdir=/var/log/thermo
-rundir=/var/run/thermo
+rundir=/run/thermo
 
 user=thermo
 group=thermo
@@ -32,6 +32,8 @@ function installScripts()
   echo "Installing start script and service file for $svcname..."
   cp $srcdir/scripts/systemd/$svcname.sh $libdir
   cp $srcdir/scripts/systemd/$svcname.service $systemdir
+  echo "Enabling $svcname ... "
+  systemctl enable $svcname
 }
 
 uid=$(id -u $user)
@@ -50,6 +52,11 @@ else
   echo "Skipping groupadd, group $group already existed with id $gid"
 fi
 
+if [ ! -f /usr/lib/tmpfiles.d/thermo.conf ]
+then
+  cp $srcdir/scripts/systemd/thermo.conf /usr/lib/tmpfiles.d
+fi
+
 makeDirectoryFor $libdir $user $group
 makeDirectoryFor $logdir $user $group
 makeDirectoryFor $rundir $user $group
@@ -60,7 +67,6 @@ installScripts moer
 
 echo "reloading systemd configs..."
 systemctl daemon-reload
-
 echo "restarting services..."
 systemctl restart moer
 systemctl restart thermo

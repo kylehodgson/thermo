@@ -17,8 +17,9 @@ import bleson
 from bleson import get_provider, Observer, UUID16
 from bleson.logger import log, ERROR, DEBUG, INFO
 from discover.goveesensors import GoveeSensorsDiscovery
-
 import json
+import cProfile, pstats, io
+from pstats import SortKey
 
 ## if ble advertisements with temperature readings are appearing faster than this rate, ignore them 
 ## until this many seconds have passed so that the script isnt running constantly
@@ -63,7 +64,6 @@ async def handle_reading(reading: TemperatureReading, config: SensorConfiguratio
     except Exception as err:
         print(f"[{log_time()}] trouble connecting to plug {config.plug} in location {config.location} : {err} {type(err)}")
         return
-    
     panelState=get_panel_state_from(plugSvc)
     ecoMode=get_eco_mode()
     scheduleOff=get_schedule_off()
@@ -146,7 +146,6 @@ def get_decision_from(context: DecisionContext) -> PanelDecision:
         return PanelDecision.TURN_OFF
     
     #figrue out if we should be off based on the schedule.
-    
     if context.serviceType==ServiceType.SCHEDULED and context.scheduleOff and context.panelState==PanelState.OFF:
         return PanelDecision.DO_NOTHING
     if context.serviceType==ServiceType.SCHEDULED and context.scheduleOff and context.panelState==PanelState.ON:
@@ -158,7 +157,7 @@ def get_decision_from(context: DecisionContext) -> PanelDecision:
     else:
         ecoFactor=float(0)    
 
-    # be a normal thermostat
+    # be a thermostat
     if context.panelState == PanelState.OFF and context.readingTemp < context.configTemp - context.allowableDrift - ecoFactor  :
         print(f"[{log_time()}] temp {context.readingTemp} in room {context.configTemp} is unacceptably cool given ecoFactor {ecoFactor} and allowable drift {context.allowableDrift}, turning on panel")
         return PanelDecision.TURN_ON
@@ -212,7 +211,7 @@ def main() -> int:
     try:
         while True:
             observer.start()
-            time.sleep(10)  # I don't yet understand why this start/sleep/stop loop is necessary.
+            time.sleep(1)  # I don't yet understand why this start/sleep/stop loop is necessary.
             observer.stop() # When I skip the sleep and stop, it forks to the background but doesn't work
     except KeyboardInterrupt:
         try:

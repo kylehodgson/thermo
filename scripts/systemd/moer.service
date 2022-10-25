@@ -1,6 +1,5 @@
 [Unit]
 Description=Thermo moer service
-DefaultDependencies=no
 After=network.target
 
 [Service]
@@ -10,3 +9,5 @@ Group=thermo
 ExecStart=/usr/local/lib/thermo/moer.sh start
 PIDFile=thermo/moer.pid
 
+[Install]
+WantedBy=multi-user.target

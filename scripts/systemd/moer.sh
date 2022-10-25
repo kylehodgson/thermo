@@ -3,6 +3,11 @@
 pidfile="/run/thermo/moer.pid"
 logfile="/var/log/thermo/moer.log"
 
+if [ ! -d /run/thermo ]
+then
+	mkdir -p /run/thermo
+fi
+
 function start_service {
     echo "" >> $logfile 2>&1
     echo "starting moer service..." >> $logfile 2>&1

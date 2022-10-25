@@ -3,6 +3,11 @@
 pidfile="/run/thermo/thermo.pid"
 logfile="/var/log/thermo/thermo.log"
 
+if [ ! -d /run/thermo ]
+then
+	mkdir /run/thermo
+fi
+
 function start_service {
     echo "" >> $logfile 2>&1
     echo "starting thermo service..." >> $logfile 2>&1

@@ -10,3 +10,5 @@ Group=thermo
 ExecStart=/usr/local/lib/thermo/thermo.sh start
 PIDFile=thermo/thermo.pid
 
+[Install]
+WantedBy=multi-user.target

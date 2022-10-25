@@ -3,6 +3,11 @@
 pidfile="/run/thermo/zonemgr.pid"
 logfile="/var/log/thermo/zonemgr.log"
 
+if [ ! -d /run/thermo]
+then
+	mkdir /run/thermo
+fi
+
 function start_service {
     echo "" >> $logfile 2>&1
     echo "starting zonemanager..." >> $logfile 2>&1
