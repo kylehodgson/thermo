@@ -1,14 +1,10 @@
-from urllib import response
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from zonemgr.models import MoerReading, MoerReadingFrom
-from zonemgr.services.plug_db_service import PlugService
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.db import ZoneManagerDB
-import starlette.status as status
 
 
 # poor dev's dependency injection
@@ -16,7 +12,6 @@ zmdb=ZoneManagerDB()
 configsvc = ConfigStore(zmdb)
 tempsvc=TempReadingStore(zmdb)
 moersvc=MoerReadingStore(zmdb)
-plugsvc=PlugService(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
 WATTTIMEUSERNAME="longbranchflyer"
@@ -58,7 +53,7 @@ async def update_thermo_configuration(
     name: str=Form("name"), 
     location=Form("location"),
     plug=Form("plug")):
-    sc = configsvc.set_sensor_config(
+    configsvc.set_sensor_config(
         sensor_id=sensor_id, 
         temp=float(temp), 
         service_type=service_type, 

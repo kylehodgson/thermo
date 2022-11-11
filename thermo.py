@@ -13,13 +13,8 @@ from zonemgr.db import ZoneManagerDB
 from zonemgr.models import SensorConfiguration, TemperatureReading, ServiceType
 #from thermostat.smartplug import SmartPlug
 import kasa
-import bleson
 from bleson import get_provider, Observer, UUID16
-from bleson.logger import log, ERROR, DEBUG, INFO
 from discover.goveesensors import GoveeSensorsDiscovery
-import json
-import cProfile, pstats, io
-from pstats import SortKey
 
 ## if ble advertisements with temperature readings are appearing faster than this rate, ignore them 
 ## until this many seconds have passed so that the script isnt running constantly

@@ -10,3 +10,4 @@ smbus2
 requests
 psycopg2-binary
 schedule
+simplemoer

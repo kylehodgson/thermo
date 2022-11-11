@@ -1,4 +1,3 @@
-from typing import Optional
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import TemperatureReading
 
