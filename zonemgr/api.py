@@ -14,9 +14,6 @@ tempsvc=TempReadingStore(zmdb)
 moersvc=MoerReadingStore(zmdb)
 templates = Jinja2Templates(directory="zonemgr/templates")
 
-WATTTIMEUSERNAME="longbranchflyer"
-WATTTIMEPASSWORD="AJqPC4aXQLo*gm8mQEoWHcWK"
-
 app = FastAPI()
 
 @app.on_event("shutdown")
