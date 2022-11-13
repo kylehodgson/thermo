@@ -5,7 +5,8 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-srcdir=/home/pi/projects/thermo
+nologinsh=$(which nologin)
+srcdir=$(pwd)
 libdir=/usr/local/lib/thermo
 systemdir=/etc/systemd/system
 logdir=/var/log/thermo
@@ -31,6 +32,8 @@ function installScripts()
   svcname=$1
   echo "Installing start script and service file for $svcname..."
   cp $srcdir/scripts/systemd/$svcname.sh $libdir
+  echo "Setting BINDIR to $srcdir for $svcname in $libdir/${svcname}.sh"
+  sed -i "s;|BINDIR|;${srcdir};g" ${libdir}/${svcname}.sh
   cp $srcdir/scripts/systemd/$svcname.service $systemdir
   echo "Enabling $svcname ... "
   systemctl enable $svcname
@@ -39,7 +42,7 @@ function installScripts()
 uid=$(id -u $user)
 if [ -z $uid ]
 then
-  useradd -d $srcdir -g $group -s /bin/sbin/nologin $user
+  useradd -d $srcdir -g $group -s $nologinsh $user
 else
   echo "Skipping useradd, user $user already existed with id $uid"
 fi

@@ -2,6 +2,7 @@
 
 pidfile="/run/thermo/zonemgr.pid"
 logfile="/var/log/thermo/zonemgr.log"
+bindir=|BINDIR|
 
 if [ ! -d /run/thermo]
 then
@@ -11,7 +12,7 @@ fi
 function start_service {
     echo "" >> $logfile 2>&1
     echo "starting zonemanager..." >> $logfile 2>&1
-    cd /home/pi/projects/thermo
+    cd $bindir
     . venv/bin/activate
     . .env
     python -m uvicorn zonemgr.api:app --host 0.0.0.0 --port 8888 >> $logfile 2>&1 &

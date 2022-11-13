@@ -2,6 +2,7 @@
 
 pidfile="/run/thermo/thermo.pid"
 logfile="/var/log/thermo/thermo.log"
+bindir=|BINDIR|
 
 if [ ! -d /run/thermo ]
 then
@@ -11,7 +12,7 @@ fi
 function start_service {
     echo "" >> $logfile 2>&1
     echo "starting thermo service..." >> $logfile 2>&1
-    cd /home/pi/projects/thermo
+    cd $bindir
     . venv/bin/activate
     . .env
     python thermo.py >> $logfile 2>&1 &
