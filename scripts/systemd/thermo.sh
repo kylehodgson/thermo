@@ -11,7 +11,7 @@ fi
 
 function start_service {
     echo "" >> $logfile 2>&1
-    echo "starting thermo service..." >> $logfile 2>&1
+    echo "starting $0 service..." >> $logfile 2>&1
     cd $bindir
     . venv/bin/activate
     . .env
@@ -32,11 +32,11 @@ function stop_service {
 }
 
 function echo_failure {
-    echo "zone manager failed to start."
+    echo "$0 failed to start."
 }
 
 function echo_success {
-    echo "zone manager started."
+    echo "$0 started."
 }
 
 if [ "$1" == "start" ]

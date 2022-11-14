@@ -24,7 +24,7 @@ function addUserAndGroup() {
     if [ -z $uid ]
     then
         echo "creating user $user..."
-        useradd -g $group -s $nologinsh $user
+        useradd -g $group -s $(which nologin) $user
         grep $user /etc/passwd
     else
         echo "Skipping useradd, user $user already existed with id $uid"
@@ -33,7 +33,11 @@ function addUserAndGroup() {
 
 function installApp() {
     base=$1
+    user=$2
+    group=$3
+
     mkdir -p $base/app
+
     git clone /vagrant $base/app
     cd $base/app
     python3 -m venv venv
@@ -44,10 +48,12 @@ function installApp() {
     do
         sudo -u postgres psql thermo -f $base/app/$sql
     done
-    . venv/bin/activate
-    . ./.env
+
+    chown -R $user:$group $base/app
     sudo ./scripts/install.sh
 }
 
-addUserAndGroup thermo thermo
-installApp /home/thermo/
+username=thermo
+groupname=thermo
+addUserAndGroup $username $groupname
+installApp /home/thermo/ $username $groupname
