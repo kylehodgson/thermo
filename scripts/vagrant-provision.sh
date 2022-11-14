@@ -7,17 +7,44 @@ sudo systemctl start postgresql
 sudo -u postgres createdb thermo
 sudo -u postgres createuser zonemgr
 
-mkdir -p ~/thermo
-git clone /vagrant ~/thermo
-cd ~/thermo
-python3 -m venv venv
+function addUserAndGroup() {
+    user=$1
+    group=$2
 
-sudo -u postgres psql thermo -f /vagrant/db/migration-0001.sql
-sudo -u postgres psql thermo -f /vagrant/db/migration-0002.sql
-sudo -u postgres psql thermo -f /vagrant/db/migration-0003.sql
+    gid=$(id -u $group)
+    if [ -z $gid ]
+    then
+        groupadd -f $group
+    else
+        echo "Skipping groupadd, group $group already existed with id $gid"
+    fi
 
-somechars=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24 ; echo)
-sed -e s/\|CHANGEME\|/${somechars}/g < example.env > .env
-sudo -u postgres psql thermo -c "ALTER USER zonemgr WITH PASSWORD '${somechars}'"
-. ./.env
-sudo ./scripts/install.sh
+    uid=$(id -u $user)
+    if [ -z $uid ]
+    then
+        useradd -g $group -s $nologinsh $user
+    else
+        echo "Skipping useradd, user $user already existed with id $uid"
+    fi
+}
+
+function installApp() {
+    base=$1
+    mkdir -p $base/app
+    git clone /vagrant $base/app
+    cd $base/app
+    python3 -m venv venv
+    somechars=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24 ; echo)
+    sed -e s/\|CHANGEME\|/${somechars}/g < example.env > .env
+    sudo -u postgres psql thermo -c "ALTER USER zonemgr WITH PASSWORD '${somechars}'"
+    for sql in $(ls db/*.sql)
+    do
+        sudo -u postgres psql thermo -f $base/app/$sql
+    done
+    . ven/bin/activate
+    . ./.env
+    sudo ./scripts/install.sh
+}
+
+addUserAndGroup thermo thermo
+installApp /home/thermo/
