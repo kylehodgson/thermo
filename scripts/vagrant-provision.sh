@@ -41,6 +41,8 @@ function installApp() {
     git clone /vagrant $base/app
     cd $base/app
     python3 -m venv venv
+    . venv/bin/activate
+    pip3 install -r requirements.txt
     somechars=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24 ; echo)
     sed -e s/\|CHANGEME\|/${somechars}/g < example.env > .env
     sudo -u postgres psql thermo -c "ALTER USER zonemgr WITH PASSWORD '${somechars}'"
