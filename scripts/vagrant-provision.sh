@@ -14,6 +14,7 @@ function addUserAndGroup() {
     gid=$(id -u $group)
     if [ -z $gid ]
     then
+        echo "creating group $group..."
         groupadd -f $group
     else
         echo "Skipping groupadd, group $group already existed with id $gid"
@@ -22,7 +23,9 @@ function addUserAndGroup() {
     uid=$(id -u $user)
     if [ -z $uid ]
     then
+        echo "creating user $user..."
         useradd -g $group -s $nologinsh $user
+        grep $user /etc/passwd
     else
         echo "Skipping useradd, user $user already existed with id $uid"
     fi
@@ -41,7 +44,7 @@ function installApp() {
     do
         sudo -u postgres psql thermo -f $base/app/$sql
     done
-    . ven/bin/activate
+    . venv/bin/activate
     . ./.env
     sudo ./scripts/install.sh
 }
