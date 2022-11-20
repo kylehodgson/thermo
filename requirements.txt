@@ -11,3 +11,4 @@ requests
 psycopg2-binary
 schedule
 simplemoer
+requests-oauthlib
