@@ -50,6 +50,7 @@ function installApp() {
     cd $base/app
     git clone https://github.com/kylehodgson/thermo.git
     cd thermo
+    git checkout refactor
     python3 -m venv venv
     . venv/bin/activate
     pip3 install -r requirements.txt
