@@ -32,10 +32,7 @@ TEMPERATURE_RECORD_STEP = 60 * 10
 
 ECO_REDUCTION=float(1.5)
 
-WATTTIMEUSERNAME="longbranchflyer"
-WATTTIMEPASSWORD="AJqPC4aXQLo*gm8mQEoWHcWK"
-LATT="43.255707196639314"
-LONG="-79.95159344351713"
+
 MAXMOER=50
 
 ## set the "last reading time" in the past so that the system will start immediately
