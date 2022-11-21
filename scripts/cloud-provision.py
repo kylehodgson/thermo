@@ -8,7 +8,7 @@ import json
 import random
 import string
 import time
-
+import subprocess
 
 class MythicBeasts:
     LOGIN_URL = 'https://auth.mythic-beasts.com/login'
@@ -31,7 +31,7 @@ class MythicBeasts:
         # usermod -aG sudo thermo
         # echo "thermo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
         # mkdir /home/thermo/.ssh
-        # echo "ssh-ed25519 AAAA...BLAH your@email.com" >> /home/thermo/.ssh/authorized_keys
+        # echo $PUBKEY >> /home/thermo/.ssh/authorized_keys
         # echo -e "127.0.0.1\t$(hostname)" >> /etc/hosts
         pass
 
@@ -52,13 +52,22 @@ class MythicBeasts:
         print(f"deprovisioning response: {deprovision_response.text}")
 
     def provision(self, name="", machine_config={}) -> dict:
-        authHeader = self._getAuthHeader()
         if not machine_config:
             with open('scripts/newserver.json') as f:
                 machine_config = json.load(f)
         if not name:
             letters = string.ascii_lowercase
             name = ''.join(random.choice(letters) for i in range(10))
+        if 'ssh_key' not in machine_config:
+            pubkey = environ.get('PUBKEY')
+            if pubkey:
+                machine_config['ssh_key'] = pubkey
+            else:
+                raise Exception(
+                    "no ssh key provided. this can be passed in via provision's"
+                    "machine_config['ssh_key'] parameter, or provided in an environment variable PUBKEY.")
+        
+        authHeader = self._getAuthHeader()
         provision_response = post(
             self.PROVISION_URL+name, headers=authHeader, json=machine_config)
 
@@ -104,6 +113,24 @@ def main() -> None:
     host = cloud.provision()
     print(f"Host info: {host}")
     print(f"Connect via SSH: ssh -p {host['ssh_port']} root@{host['fqdn']}")
+    
+    subprocess.Popen(
+        f"scp -P {host['ssh_port']} scripts/linux-provision.sh root@{host['fqdn']}:~/", 
+        shell=True, 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE).communicate()
+    subprocess.Popen(
+        f"ssh -p {host['ssh_port']} root@{host['fqdn']} 'chmod +x ~/linux-provision.sh'", 
+        shell=True, 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE).communicate()
+    subprocess.Popen(
+        f"ssh -p {host['ssh_port']} root@{host['fqdn']} '~/linux-provision.sh'", 
+        shell=True, 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE).communicate()
+    
+    # echo "$PUBKEYS" >> /home/thermo/.ssh/authorized_keys
     # cloud.deprovision(host)
 
 

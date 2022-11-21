@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 env
 ._*.png
+.env_backup

@@ -1,16 +1,19 @@
 #!/bin/bash
 # scp -P <PORT> scripts/linux-provision.sh thermo@ssh.<NAME>.hostedpi.com:/tmp
-export LC_ALL=C
 
-# Failed to set capabilities on file `/usr/bin/python3.9' (Operation not supported)
-# The value of the capability argument is not permitted for a file. Or the file is not a regular (non-symlink) file
+apt-get -y install sudo
+echo -e "127.0.0.1\t$(hostname)" >> /etc/hosts # sudo will complain if the hostname isn't in hosts
+useradd thermo -m -s $(which bash)
+usermod -aG sudo thermo
+echo "thermo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+mkdir /home/thermo/.ssh
+export LC_ALL=C
 sudo apt-get -y update
 sudo apt-get -y install git
 sudo apt-get -y install postgresql postgresql-contrib libpq-dev
 sudo apt-get -y install python3 python3-venv python3-pip
-sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
+sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`) # Failed to set capabilities on file `/usr/bin/python3.9' (Operation not supported) # The value of the capability argument is not permitted for a file. Or the file is not a regular (non-symlink) file
 sudo systemctl start postgresql
-# pg_ctlcluster 13 main start?
 sudo -u postgres createdb thermo
 sudo -u postgres createuser zonemgr
 

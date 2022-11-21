@@ -5,7 +5,6 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-nologinsh=$(which nologin)
 srcdir=$(pwd)
 libdir=/usr/local/lib/thermo
 systemdir=/etc/systemd/system
@@ -42,7 +41,7 @@ function installScripts()
 uid=$(id -u $user)
 if [ -z $uid ]
 then
-  useradd -d $srcdir -g $group -s $nologinsh $user
+  useradd -d $srcdir -g $group $user
 else
   echo "Skipping useradd, user $user already existed with id $uid"
 fi
