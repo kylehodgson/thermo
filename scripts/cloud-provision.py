@@ -111,25 +111,32 @@ class MythicBeasts:
 def main() -> None:
     cloud = MythicBeasts()
     host = cloud.provision()
-    print(f"Host info: {host}")
-    print(f"Connect via SSH: ssh -p {host['ssh_port']} root@{host['fqdn']}")
     
+    print(f"scp -P {host['ssh_port']} scripts/linux-provision.sh root@{host['fqdn']}:~/")
     subprocess.Popen(
         f"scp -P {host['ssh_port']} scripts/linux-provision.sh root@{host['fqdn']}:~/", 
         shell=True, 
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE).communicate()
+    print(f"ssh -p {host['ssh_port']} root@{host['fqdn']} 'chmod +x ~/linux-provision.sh'")
     subprocess.Popen(
         f"ssh -p {host['ssh_port']} root@{host['fqdn']} 'chmod +x ~/linux-provision.sh'", 
         shell=True, 
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE).communicate()
+    print(f"ssh -p {host['ssh_port']} root@{host['fqdn']} '~/linux-provision.sh'")
     subprocess.Popen(
         f"ssh -p {host['ssh_port']} root@{host['fqdn']} '~/linux-provision.sh'", 
         shell=True, 
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE).communicate()
+    print("Provisioning complete.")
+    print(f"Host info: {host}")
+    print(f"Connect via SSH: ssh -p {host['ssh_port']} root@{host['fqdn']}")
     
+    
+    # sudo ncat -kl 80 < reply | ncat 127.0.0.1 8888 > reply
+
     # echo "$PUBKEYS" >> /home/thermo/.ssh/authorized_keys
     # cloud.deprovision(host)
 
