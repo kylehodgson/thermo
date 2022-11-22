@@ -1,8 +1,18 @@
 #!/bin/bash
+# scp -P <PORT> scripts/linux-provision.sh thermo@ssh.<NAME>.hostedpi.com:/tmp
+
+apt-get -y install sudo
+echo -e "127.0.0.1\t$(hostname)" >> /etc/hosts # sudo will complain if the hostname isn't in hosts
+useradd thermo -m -s $(which bash)
+usermod -aG sudo thermo
+echo "thermo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+mkdir /home/thermo/.ssh
+export LC_ALL=C
 sudo apt-get -y update
+sudo apt-get -y install git
 sudo apt-get -y install postgresql postgresql-contrib libpq-dev
 sudo apt-get -y install python3 python3-venv python3-pip
-sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
+sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`) # Failed to set capabilities on file `/usr/bin/python3.9' (Operation not supported) # The value of the capability argument is not permitted for a file. Or the file is not a regular (non-symlink) file
 sudo systemctl start postgresql
 sudo -u postgres createdb thermo
 sudo -u postgres createuser zonemgr
@@ -37,8 +47,10 @@ function installApp() {
 
     mkdir -p $base/app
 
-    git clone /vagrant $base/app
     cd $base/app
+    git clone https://github.com/kylehodgson/thermo.git
+    cd thermo
+    git checkout refactor
     python3 -m venv venv
     . venv/bin/activate
     pip3 install -r requirements.txt
@@ -50,7 +62,7 @@ function installApp() {
     . ./.env
     for sql in $(ls db/*.sql)
     do
-        psql thermo -f $base/app/$sql
+        psql thermo -f $sql
     done
 
     chown -R $user:$group $base

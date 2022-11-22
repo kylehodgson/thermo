@@ -1,21 +1,21 @@
 #!/usr/bin/bash
 
-pidfile="/run/thermo/thermo.pid"
-logfile="/var/log/thermo/thermo.log"
+pidfile="/run/thermo/moer.pid"
+logfile="/var/log/thermo/moer.log"
 bindir=|BINDIR|
 
 if [ ! -d /run/thermo ]
 then
-	mkdir /run/thermo
+	mkdir -p /run/thermo
 fi
 
 function start_service {
     echo "" >> $logfile 2>&1
-    echo "starting $0 service..." >> $logfile 2>&1
+    echo "starting moer service..." >> $logfile 2>&1
     cd $bindir
     . venv/bin/activate
     . .env
-    python thermo.py >> $logfile 2>&1 &
+    python moer.py >> $logfile 2>&1 &
     RETVAL=$?
     PID=$!
     [ $RETVAL -eq 0 ] && echo $PID > $pidfile && echo_success || echo_failure
@@ -32,11 +32,11 @@ function stop_service {
 }
 
 function echo_failure {
-    echo "$0 failed to start."
+    echo "moer service failed to start."
 }
 
 function echo_success {
-    echo "$0 started."
+    echo "moer service started."
 }
 
 if [ "$1" == "start" ]

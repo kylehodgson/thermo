@@ -1,0 +1,6 @@
+{
+    "disk": 10,
+    "model": 4,
+    "os_image": "rpi-bullseye-arm64",
+    "wait_for_dns": true
+}

@@ -1,7 +1,7 @@
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import TemperatureReading
 
-class TempReadingService:
+class TempReadingStore:
     zmdb: ZoneManagerDB
 
     def __init__(self, zmdb: ZoneManagerDB) -> None:
@@ -18,21 +18,13 @@ class TempReadingService:
                                  (reading.json(), seconds_elapsed, reading.sensor_id))
                 conn.commit()
 
-    def select_latest_temperature_reading(self,sensor_id: str):
+    def get_latest_temperature_reading_for(self,sensor_id: str) -> TemperatureReading:
         criteria="""{"sensor_id": "%s"}""" % sensor_id
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select reading, reading_time from public.temperature_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""" , (criteria, ))
+                cursor.execute("""select reading from public.temperature_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""" , (criteria, ))
                 if cursor.rowcount>0:
-                    record=cursor.fetchone()
-                    (reading,timestamp)=record
-                    reading = TemperatureReading.parse_obj(reading)
-                    return (reading, timestamp)
-                else:
-                    return (False, False)
-    
-    def getTemperatureReading(self,sensor: str):
-        (reading, time)=self.select_latest_temperature_reading(sensor)
-        return reading.temp
+                    (record,)=cursor.fetchone()
+                    return TemperatureReading.parse_obj(record)
 
 

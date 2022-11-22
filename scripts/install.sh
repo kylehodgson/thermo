@@ -5,33 +5,71 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-srcdir=/home/pi/projects/thermo
+srcdir=$(pwd)
 libdir=/usr/local/lib/thermo
 systemdir=/etc/systemd/system
 logdir=/var/log/thermo
-rundir=/var/run/thermo
+rundir=/run/thermo
 
 user=thermo
 group=thermo
 
-groupadd -f $group
-useradd -d $srcdir -g $group -s /bin/sbin/nologin $user
+function makeDirectoryFor () 
+{
+  dir=$1
+  user=$2
+  group=$3
 
-mkdir -p $libdir
-chown -R $user $libdir
-chgrp -R $group $libdir
+  echo "Creating $dir and setting permissions for user $user group $group..."
+  mkdir -p $dir
+  chown -R $user $dir
+  chgrp -R $group $dir
+}
 
-mkdir -p $logdir
-chown $user $logdir
-chgrp $group $logdir
+function installScripts()
+{
+  svcname=$1
+  echo "Installing start script and service file for $svcname..."
+  cp $srcdir/scripts/systemd/$svcname.sh $libdir
+  echo "Setting BINDIR to $srcdir for $svcname in $libdir/${svcname}.sh"
+  sed -i "s;|BINDIR|;${srcdir};g" ${libdir}/${svcname}.sh
+  cp $srcdir/scripts/systemd/$svcname.service $systemdir
+  echo "Enabling $svcname ... "
+  systemctl enable $svcname
+}
 
-mkdir -p $rundir
-chown $user $rundir
-chgrp $group $rundir
+uid=$(id -u $user)
+if [ -z $uid ]
+then
+  useradd -d $srcdir -g $group $user
+else
+  echo "Skipping useradd, user $user already existed with id $uid"
+fi
 
-cp $srcdir/scripts/systemd/thermo.sh $libdir
-cp $srcdir/scripts/systemd/zonemgr.sh $libdir
-cp $srcdir/scripts/systemd/thermo.service $systemdir
-cp $srcdir/scripts/systemd/zonemgr.service $systemdir
+gid=$(id -u $group)
+if [ -z $gid ]
+then
+  groupadd -f $group
+else
+  echo "Skipping groupadd, group $group already existed with id $gid"
+fi
 
+if [ ! -f /usr/lib/tmpfiles.d/thermo.conf ]
+then
+  cp $srcdir/scripts/systemd/thermo.conf /usr/lib/tmpfiles.d
+fi
 
+makeDirectoryFor $libdir $user $group
+makeDirectoryFor $logdir $user $group
+makeDirectoryFor $rundir $user $group
+
+installScripts thermo
+installScripts zonemgr
+installScripts moer
+
+echo "reloading systemd configs..."
+systemctl daemon-reload
+echo "restarting services..."
+systemctl restart moer
+systemctl restart thermo
+systemctl restart zonemgr

@@ -10,3 +10,6 @@ Group=thermo
 ExecStart=/usr/local/lib/thermo/zonemgr.sh start
 PIDFile=thermo/zonemgr.pid
 
+[Install]
+WantedBy=multi-user.target
+

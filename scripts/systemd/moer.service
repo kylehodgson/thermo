@@ -1,0 +1,13 @@
+[Unit]
+Description=Thermo moer service
+After=network.target
+
+[Service]
+Type=forking
+User=thermo
+Group=thermo
+ExecStart=/usr/local/lib/thermo/moer.sh start
+PIDFile=thermo/moer.pid
+
+[Install]
+WantedBy=multi-user.target
