@@ -30,7 +30,7 @@ SCHEDULE_START = 21
 ## for a given sensor
 TEMPERATURE_RECORD_STEP = 60 * 10
 
-ECO_REDUCTION=float(1.5)
+ECO_REDUCTION=float(.75)
 
 
 MAXMOER=50
