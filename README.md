@@ -83,3 +83,8 @@ sudo ./install.sh
 sudo systemctl start thermo
 sudo systemctl start zonemgr
 ```
+
+## Test
+```bash
+python -m pytest
+```

@@ -60,12 +60,11 @@ class Thermostat:
     MAXMOER: int
 
     last_reading_time: int
-    zmdb: ZoneManagerDB
     temp_store: TempReadingStore
     config_store: ConfigStore
     moer_store: MoerReadingStore
 
-    def __init__(self) -> None:
+    def __init__(self, temp_store: TempReadingStore, config_store: ConfigStore, moer_store: MoerReadingStore) -> None:
         # if ble advertisements with temperature readings are appearing faster than this rate,
         # ignore them until this many seconds have passed so that the script isnt running constantly
         self.CHECK_INTERVAL = int(5)
@@ -83,10 +82,10 @@ class Thermostat:
         self.MAXMOER = 50
         # set the "last reading time" in the past so that the system will start immediately
         self.last_reading_time = int(time.time()) - (self.CHECK_INTERVAL * 2)
-        self.zmdb = ZoneManagerDB()
-        self.temp_store = TempReadingStore(self.zmdb)
-        self.config_store = ConfigStore(self.zmdb)
-        self.moer_store = MoerReadingStore(self.zmdb)
+
+        self.temp_store = temp_store
+        self.config_store = config_store
+        self.moer_store = moer_store
 
     def too_soon(self) -> bool:
         this_reading_time = int(time.time())
