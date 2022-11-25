@@ -61,7 +61,7 @@ async def update_thermo_configuration(
 
 @app.get("/config-edit-hx/{sensor_id}", response_class=HTMLResponse)
 async def getConfigEditorFor(request: Request, sensor_id: str):
-    (id,sensor)=configsvc.get_sensor_config(sensor_id)
+    (id,sensor)=configsvc.get_config_for(sensor_id)
     return templates.TemplateResponse("edit_config.jinja", {"request": request, "sensor": sensor, "id": id})
 
 @app.get("/moer-readings/")
