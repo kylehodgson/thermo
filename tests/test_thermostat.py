@@ -99,6 +99,50 @@ def test_turns_off_when_its_too_warm():
 
     assert t.get_decision_from(ctx) == PanelDecision.TURN_OFF
 
+def test_eco_mode_reduces_temps_correctly():
+    t = Thermostat(None, None, None)
+    desired_temp = float(22)
+    allowable_drift = float(2)
+    eco_factor = float(1)
+    warm_enough_considering_eco_mode = desired_temp - allowable_drift - eco_factor
+    too_cold_even_for_eco_mode = desired_temp - allowable_drift - eco_factor - float(1)
+    too_warm_considering_eco_mode = desired_temp + allowable_drift - eco_factor + float(.1)
+
+    ctx = DecisionContext(
+        panel_state=PanelState.OFF, #
+        service_type=ServiceType.ON,
+        schedule_off=False,
+        reading_temp=warm_enough_considering_eco_mode, #
+        config_temp=desired_temp,
+        allowable_drift=allowable_drift,
+        eco_mode=EcoMode.ENABLED,
+        eco_reduction=eco_factor)
+
+    assert t.get_decision_from(ctx) == PanelDecision.DO_NOTHING
+
+    ctx = DecisionContext(
+        panel_state=PanelState.ON, #
+        service_type=ServiceType.ON,
+        schedule_off=False,
+        reading_temp=too_warm_considering_eco_mode, #
+        config_temp=desired_temp,
+        allowable_drift=allowable_drift,
+        eco_mode=EcoMode.ENABLED,
+        eco_reduction=eco_factor)
+
+    assert t.get_decision_from(ctx) == PanelDecision.TURN_OFF
+
+    ctx = DecisionContext(
+        panel_state=PanelState.OFF, #
+        service_type=ServiceType.ON,
+        schedule_off=False,
+        reading_temp=too_cold_even_for_eco_mode, #
+        config_temp=desired_temp,
+        allowable_drift=allowable_drift,
+        eco_mode=EcoMode.ENABLED,
+        eco_reduction=eco_factor)
+
+    assert t.get_decision_from(ctx) == PanelDecision.TURN_ON
 
 @pytest.mark.asyncio
 async def test_handles_readings():
