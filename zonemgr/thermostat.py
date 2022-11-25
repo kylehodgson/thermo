@@ -109,6 +109,7 @@ class Thermostat:
             return
 
         self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
+        
         try:
             plug = kasa.SmartPlug(config.plug)
             await plug.update()
@@ -130,12 +131,12 @@ class Thermostat:
                 eco_mode=self.get_eco_mode(),
                 eco_reduction=self.ECO_REDUCTION))
 
-        if decision == PanelDecision.DO_NOTHING:
+        if decision is PanelDecision.DO_NOTHING:
             return
-        if decision == PanelDecision.TURN_OFF:
+        if decision is PanelDecision.TURN_OFF:
             await plug.turn_off()
             return
-        if decision == PanelDecision.TURN_ON:
+        if decision is PanelDecision.TURN_ON:
             await plug.turn_on()
             return
 
@@ -152,33 +153,26 @@ class Thermostat:
             return PanelState.ON
 
     def get_decision_from(self, ctx: DecisionContext) -> PanelDecision:
-        # if servicetype is off, we don't need to check the thermostat,
-        # just make sure it's off
-        if ctx.service_type == ServiceType.OFF:
-            if ctx.panel_state.OFF:
-                return PanelDecision.DO_NOTHING
-            if ctx.panel_state.ON:
-                return PanelDecision.TURN_OFF
+        heat_is_off = ctx.panel_state is PanelState.OFF
+        heat_is_on = ctx.panel_state is PanelState.ON
+        heat_is_disabled = (
+            ctx.service_type is ServiceType.OFF or
+            (ctx.service_type is ServiceType.SCHEDULED and ctx.schedule_off))
 
-        # if servicetype is scheduled, make sure we're not on while scheduled off
-        if ctx.service_type == ServiceType.SCHEDULED and ctx.schedule_off:
-            if ctx.panel_state == PanelState.OFF:
-                return PanelDecision.DO_NOTHING
-            if ctx.panel_state == PanelState.ON:
-                return PanelDecision.TURN_OFF
-
-        # figure out if eco mode is enabled, and add an eco factor if so
-        if ctx.eco_mode == EcoMode.ENABLED:
+        if ctx.eco_mode is EcoMode.ENABLED:
             ecoFactor = ctx.eco_reduction
         else:
             ecoFactor = float(0)
-
-        heat_is_off = ctx.panel_state == PanelState.OFF
-        heat_is_on = ctx.panel_state == PanelState.ON
         too_cold = (
             ctx.reading_temp < ctx.config_temp - ecoFactor - ctx.allowable_drift)
         too_warm = (
             ctx.reading_temp > ctx.config_temp - ecoFactor + ctx.allowable_drift)
+
+        if heat_is_disabled and heat_is_off:
+                return PanelDecision.DO_NOTHING
+        
+        if heat_is_disabled and heat_is_on:
+                return PanelDecision.TURN_OFF
 
         if too_cold and heat_is_off:
             print(
