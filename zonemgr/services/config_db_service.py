@@ -10,7 +10,7 @@ class ConfigStore:
         self.zmdb=zmdb
 
     def save(self,sc):
-        id,sc_record=self.get_sensor_config(sc.sensor_id)
+        id,sc_record=self.get_config_for(sc.sensor_id)
         with self.zmdb as conn: # reading values from environment
             with conn.cursor() as cursor:
                 if sc_record:
@@ -24,7 +24,7 @@ class ConfigStore:
                 conn.commit()
         return id
 
-    def get_sensor_config(self,sensor: str) -> Tuple[int,SensorConfiguration]:
+    def get_config_for(self,sensor: str) -> Tuple[int,SensorConfiguration]:
         criteria="""{"sensor_id": "%s"}""" % sensor
         with self.zmdb as conn:
             with conn.cursor() as cursor:

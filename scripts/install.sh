@@ -38,20 +38,21 @@ function installScripts()
   systemctl enable $svcname
 }
 
-uid=$(id -u $user)
-if [ -z $uid ]
-then
-  useradd -d $srcdir -g $group $user
-else
-  echo "Skipping useradd, user $user already existed with id $uid"
-fi
-
 gid=$(id -u $group)
 if [ -z $gid ]
 then
   groupadd -f $group
 else
   echo "Skipping groupadd, group $group already existed with id $gid"
+fi
+
+
+uid=$(id -u $user)
+if [ -z $uid ]
+then
+  useradd -d $srcdir -g $group $user
+else
+  echo "Skipping useradd, user $user already existed with id $uid"
 fi
 
 if [ ! -f /usr/lib/tmpfiles.d/thermo.conf ]
