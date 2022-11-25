@@ -1,7 +1,7 @@
 
 import pytest
 from datetime import datetime, timedelta
-from ..zonemgr.thermostat import Thermostat, DecisionContext, EcoMode, PanelState, PanelDecision
+from zonemgr.thermostat import Thermostat, DecisionContext, EcoMode, PanelState, PanelDecision
 from zonemgr.models import ServiceType, SensorConfiguration, TemperatureReading
 
 
