@@ -1,30 +1,12 @@
 #!/usr/bin/env python
 from dataclasses import dataclass
-from enum import Enum
 import time
 import datetime
-import kasa
+from zonemgr.panel_plug import PanelPlug, PanelDecision, PanelPlugFactory, PanelState, EcoMode
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
-from zonemgr.db import ZoneManagerDB
 from zonemgr.models import TemperatureReading, ServiceType
-
-
-class EcoMode(Enum):
-    ENABLED = 1
-    DISABLED = 0
-
-
-class PanelState(Enum):
-    ON = 1
-    OFF = 0
-
-
-class PanelDecision(Enum):
-    DO_NOTHING = 0
-    TURN_ON = 1
-    TURN_OFF = 2
 
 
 @dataclass(frozen=True)
@@ -63,8 +45,14 @@ class Thermostat:
     temp_store: TempReadingStore
     config_store: ConfigStore
     moer_store: MoerReadingStore
+    plug_factory: PanelPlugFactory
+    plug_service: PanelPlug
 
-    def __init__(self, temp_store: TempReadingStore, config_store: ConfigStore, moer_store: MoerReadingStore) -> None:
+    def __init__(self,
+                 temp_store: TempReadingStore,
+                 config_store: ConfigStore,
+                 moer_store: MoerReadingStore,
+                 plug_factory: PanelPlugFactory) -> None:
         # if ble advertisements with temperature readings are appearing faster than this rate,
         # ignore them until this many seconds have passed so that the script isnt running constantly
         self.CHECK_INTERVAL = int(5)
@@ -86,6 +74,7 @@ class Thermostat:
         self.temp_store = temp_store
         self.config_store = config_store
         self.moer_store = moer_store
+        self.plug_factory = plug_factory
 
     def too_soon(self) -> bool:
         this_reading_time = int(time.time())
@@ -109,19 +98,13 @@ class Thermostat:
             return
 
         self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
-        
-        try:
-            plug = kasa.SmartPlug(config.plug)
-            await plug.update()
-        except Exception as err:
-            print(
-                f"[{self.log_time()}] trouble connecting to plug {config.plug} "
-                f"in location {config.location} : {err} {type(err)}")
-            return
+
+        self.plug_service = self.plug_factory.get_plug(config)
+        self.plug_service.set_host(config.plug)
 
         decision = self.get_decision_from(
             DecisionContext(
-                panel_state=self.get_panel_state_from(plug),
+                panel_state=await self.plug_service.get_state(),
                 service_type=DecisionContext.get_service_type(
                     config.service_type),
                 schedule_off=self.get_schedule_off(),
@@ -131,26 +114,30 @@ class Thermostat:
                 eco_mode=self.get_eco_mode(),
                 eco_reduction=self.ECO_REDUCTION))
 
-        if decision is PanelDecision.DO_NOTHING:
-            return
-        if decision is PanelDecision.TURN_OFF:
-            await plug.turn_off()
-            return
-        if decision is PanelDecision.TURN_ON:
-            await plug.turn_on()
-            return
+        await self.plug_service.set_state(decision)
+
+        # if decision is PanelDecision.DO_NOTHING:
+        #     return
+        # if decision is PanelDecision.TURN_OFF:
+        #     await plug.turn_off()
+        #     return
+        # if decision is PanelDecision.TURN_ON:
+        #     await plug.turn_on()
+        #     return
 
     def get_eco_mode(self) -> EcoMode:
-        moer = self.get_moer()
+        moer = self.moer_store.select_latest_moer_reading(
+            self.moer_store.get_local_ba_id()).percent
+
         if moer > self.MAXMOER:
             return EcoMode.ENABLED
         return EcoMode.DISABLED
 
-    def get_panel_state_from(plugSvc) -> PanelState:
-        if plugSvc.is_off:
-            return PanelState.OFF
-        if plugSvc.is_on:
-            return PanelState.ON
+    # def get_panel_state_from(plugSvc) -> PanelState:
+    #     if plugSvc.is_off:
+    #         return PanelState.OFF
+    #     if plugSvc.is_on:
+    #         return PanelState.ON
 
     def get_decision_from(self, ctx: DecisionContext) -> PanelDecision:
         heat_is_off = ctx.panel_state is PanelState.OFF
@@ -169,10 +156,10 @@ class Thermostat:
             ctx.reading_temp > ctx.config_temp - ecoFactor + ctx.allowable_drift)
 
         if heat_is_disabled and heat_is_off:
-                return PanelDecision.DO_NOTHING
-        
+            return PanelDecision.DO_NOTHING
+
         if heat_is_disabled and heat_is_on:
-                return PanelDecision.TURN_OFF
+            return PanelDecision.TURN_OFF
 
         if too_cold and heat_is_off:
             print(
@@ -190,11 +177,6 @@ class Thermostat:
 
         else:
             return PanelDecision.DO_NOTHING
-
-    def get_moer(self) -> int:
-        moer = self.moerStore.select_latest_moer_reading(
-            self.moerStore.get_local_ba_id())
-        return int(moer.percent)
 
     def log_time(self) -> str:
         return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
