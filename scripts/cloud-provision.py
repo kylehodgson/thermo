@@ -103,27 +103,25 @@ def main() -> None:
     cloud = MythicBeasts()
     host = cloud.provision()
 
-    print(
-        f"scp -P {host['ssh_port']} scripts/linux-provision.sh root@{host['fqdn']}:~/")
-    subprocess.Popen(
-        f"scp -P {host['ssh_port']} scripts/linux-provision.sh root@{host['fqdn']}:~/",
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE).communicate()
-    print(
-        f"ssh -p {host['ssh_port']} root@{host['fqdn']} 'chmod +x ~/linux-provision.sh'")
-    subprocess.Popen(
-        f"ssh -p {host['ssh_port']} root@{host['fqdn']} 'chmod +x ~/linux-provision.sh'",
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE).communicate()
-    print(
-        f"ssh -p {host['ssh_port']} root@{host['fqdn']} '~/linux-provision.sh'")
-    subprocess.Popen(
-        f"ssh -p {host['ssh_port']} root@{host['fqdn']} '~/linux-provision.sh'",
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE).communicate()
+    commands = {}
+    commands[0] = {
+        "message": "Copying provisioning script to host...",
+        "command": f"scp -P {host['ssh_port']} scripts/linux-provision.sh root@{host['fqdn']}:~/"}
+    commands[1] = {
+        "message": "chmod provisioning script...",
+        "command": f"ssh -p {host['ssh_port']} root@{host['fqdn']} 'chmod +x ~/linux-provision.sh'"}
+    commands[2] = {
+        "message": "Execute provisioning script...",
+        "command": f"ssh -p {host['ssh_port']} root@{host['fqdn']} '~/linux-provision.sh'"}
+    commands[3] = {
+        "message": "Running test suite...",
+        "command": f""}
+
+    for c in commands:
+        print(commands[c]["message"])
+        subprocess.Popen(commands[c]["command"], shell=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
     print("Provisioning complete.")
     print(f"Host info: {host}")
     print(f"Connect via SSH: ssh -p {host['ssh_port']} root@{host['fqdn']}")

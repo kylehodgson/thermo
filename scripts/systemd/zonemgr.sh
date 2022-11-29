@@ -4,7 +4,7 @@ pidfile="/run/thermo/zonemgr.pid"
 logfile="/var/log/thermo/zonemgr.log"
 bindir=|BINDIR|
 
-if [ ! -d /run/thermo]
+if [ ! -d /run/thermo ]
 then
 	mkdir /run/thermo
 fi

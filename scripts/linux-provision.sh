@@ -17,6 +17,14 @@ sudo systemctl start postgresql
 sudo -u postgres createdb thermo
 sudo -u postgres createuser zonemgr
 
+if [ -f /sys/firmware/devicetree/base/model ]
+then
+    if [[ $(grep --binary-files=text -i raspberry < /sys/firmware/devicetree/base/model | wc -l) == 1 ]]
+    then
+        sudo apt-get -i install pi-bluetooth
+    fi
+fi
+
 function addUserAndGroup() {
     user=$1
     group=$2
@@ -50,7 +58,6 @@ function installApp() {
     cd $base/app
     git clone https://github.com/kylehodgson/thermo.git
     cd thermo
-    git checkout refactor
     python3 -m venv venv
     . venv/bin/activate
     pip3 install -r requirements.txt
@@ -72,4 +79,4 @@ function installApp() {
 username=thermo
 groupname=thermo
 addUserAndGroup $username $groupname
-installApp /home/thermo/ $username $groupname
+installApp /dev/shm/thermo/ $username $groupname
