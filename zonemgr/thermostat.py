@@ -66,7 +66,9 @@ class Thermostat:
         # integer - the number of seconds that should pass before we write another record to the db
         # for a given sensor
         self.TEMPERATURE_RECORD_STEP = 60 * 10
+        # if the MOER is over the maximum, allow temps to fall this much cooler than normal before turning on the heat
         self.ECO_REDUCTION = float(.75)
+        # 50 means "the grid is cleaner than it is 50% of the time over the last 30 days"
         self.MAXMOER = 50
         # set the "last reading time" in the past so that the system will start immediately
         self.last_reading_time = int(time.time()) - (self.CHECK_INTERVAL * 2)
@@ -75,7 +77,7 @@ class Thermostat:
         self.config_store = config_store
         self.moer_store = moer_store
         self.plug_factory = plug_factory
-
+        
     def too_soon(self) -> bool:
         this_reading_time = int(time.time())
         elapsed = this_reading_time - self.last_reading_time
