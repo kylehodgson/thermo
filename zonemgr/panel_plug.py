@@ -25,4 +25,3 @@ class PanelPlugFactory:
     def get_plug(self, conf: PlugConfiguration):
         from plugins.kasaplugs import KasaPanelPlug
         return KasaPanelPlug()
-        pass
