@@ -48,7 +48,7 @@ def test_does_nothing_when_its_warm_enough():
         panel_state=PanelState.OFF,
         service_type=ServiceType.ON,
         schedule_off=False,
-        reading_temp=just_warm_enough,
+        reading_temp=just_warm_enough, # try the low end of "acceptable"
         config_temp=desired_temp,
         allowable_drift=allowable_drift,
         eco_mode=EcoMode.DISABLED,
@@ -60,7 +60,7 @@ def test_does_nothing_when_its_warm_enough():
         panel_state=PanelState.OFF,
         service_type=ServiceType.ON,
         schedule_off=False,
-        reading_temp=almost_too_warm,
+        reading_temp=almost_too_warm, # try the high end of "acceptable"
         config_temp=desired_temp,
         allowable_drift=allowable_drift,
         eco_mode=EcoMode.DISABLED,
@@ -69,8 +69,7 @@ def test_does_nothing_when_its_warm_enough():
     assert t.get_decision_from(ctx) == PanelDecision.DO_NOTHING
 
     ctx = DecisionContext(
-        # previous tests cover panel state off, so now check on...
-        panel_state=PanelState.ON,
+        panel_state=PanelState.ON, # previous tests cover panel state off, so now check on...
         service_type=ServiceType.ON,
         schedule_off=False,
         reading_temp=almost_too_warm,
