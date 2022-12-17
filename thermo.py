@@ -6,7 +6,7 @@ import asyncio
 import datetime
 from bleson import get_provider, Observer
 from plugins.goveesensors import GoveeSensor
-from zonemgr.panel_plug import PanelPlug, PanelPlugFactory
+from zonemgr.panel_plug import PanelPlugFactory
 from zonemgr.thermostat import Thermostat
 from zonemgr.db import ZoneManagerDB
 from zonemgr.services.config_db_service import ConfigStore
