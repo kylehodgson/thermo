@@ -67,24 +67,22 @@ psql thermo -f db/migration-0001.sql
 ```
 
 
-## Run
+## Run in terminal
 ```bash
 cd ~/projects/thermo
 . venv/bin/activate
-. .env
+. ./.env
 python thermo.py
 uvicorn zonemgr.api:app --host 0.0.0.0 --port 8888
 ```
 
-## Install and run as service
+## Run the Install script as root to install the files and start the service
 ```bash
 cd ~/projects/thermo
 sudo ./install.sh
-sudo systemctl start thermo
-sudo systemctl start zonemgr
 ```
 
-## Test
+## Run tests
 ```bash
 python -m pytest
 ```
