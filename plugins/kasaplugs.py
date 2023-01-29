@@ -30,7 +30,7 @@ class KasaPanelPlug(PanelPlug):
             # print(f"SmartDeviceException {e} of type {type(e)} on kasa.update with host {self.host} and name {self.name}")
             discover_suggested=True
         except Exception as e:
-            print(f"Unexpected exception {e=} of type {type(e)} on kasa.update with host {self.host} and name {self.name}")
+            print(f"Unexpected exception {e} of type {type(e)} on kasa.update with host {self.host} and name {self.name}")
             raise
         else:
             if self.kasa.alias!=self.name:
