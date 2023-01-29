@@ -102,7 +102,7 @@ class Thermostat:
         self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
 
         self.plug_service = self.plug_factory.get_plug(config)
-        self.plug_service.set_host(config.plug)
+        self.plug_service.set_host(config.plug, config.name)
 
         decision = self.get_decision_from(
             DecisionContext(

@@ -26,6 +26,7 @@ class PlugConfiguration(BaseModel):
     name: str
     ip: str
     sensor: Optional[str]
+    #config_data: Optional[dict]
 
 class MoerReading(BaseModel):
     percent: int

@@ -8,7 +8,7 @@ import kasaplugs
 import goveesensors
 
 async def discover_all(plugsvc=None):
-    plugs = await kasaplugs.discover()
+    plugs = await kasaplugs.discover_plugs()
     sensors = goveesensors.discover()
     if plugsvc:
         plugsvc.savePlugs(plugs)
