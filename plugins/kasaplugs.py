@@ -27,14 +27,14 @@ class KasaPanelPlug(PanelPlug):
         try:
             await self.kasa.update()
         except SmartDeviceException as e:
-            # print(f"SmartDeviceException {e} of type {type(e)} on kasa.update with host {self.host} and name {self.name}")
+            print(f"SmartDeviceException {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
             discover_suggested=True
         except Exception as e:
-            print(f"Unexpected exception {e} of type {type(e)} on kasa.update with host {self.host} and name {self.name}")
+            print(f"Unexpected exception {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
             raise
         else:
             if self.kasa.alias!=self.name:
-                print(f"plug alias {self.kasa.alias} and name {self.name} did not match, suggesting discovery.")
+                print(f"plug alias |{self.kasa.alias}| and name |{self.name}| did not match, suggesting discovery.")
                 discover_suggested=True
         return discover_suggested
 
@@ -44,7 +44,7 @@ class KasaPanelPlug(PanelPlug):
             for addr, dev in devices.items():
                 await dev.update()
                 if dev.is_plug and dev.alias==self.name:
-                    print(f"discover attempt in KasaPanelPlug found addr {addr} alias {dev.alias} ip {dev.host} as a match for original host {self.host} name {self.name}, using this new host instead.")
+                    print(f"discover attempt in KasaPanelPlug found addr {addr} alias |{dev.alias}| ip {dev.host} as a match for original host {self.host} name |{self.name}|, using this new host instead.")
                     # todo: log this somewhere, or event it somehow ... the config is wrong, and the user doesn't know. probably a DHCP change.
                     self.kasa=dev
                     self.host=dev.host

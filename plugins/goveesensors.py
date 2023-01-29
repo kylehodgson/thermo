@@ -29,7 +29,13 @@ class GoveeSensor:
     @staticmethod
     def reading_from_advertisement(advertisement) -> TemperatureReading:
         mfg_data = '{:>7}'.format(int(advertisement.mfg_data.hex()[6:12], 16))
-        temperature = float(mfg_data[0:4])/10
+        temperature=float(20.123)
+        try:
+            orig_val=mfg_data[0:4]
+            temperature = float(orig_val)/10
+        except ValueError:
+            print(f"Could not convert {orig_val} to float.")
+
         humidity = float(mfg_data[4:7])/10
         battery = int(advertisement.mfg_data.hex()[12:14], 16)
         return TemperatureReading(
