@@ -28,7 +28,10 @@ class KasaPanelPlug(PanelPlug):
             await self.kasa.update()
         except SmartDeviceException as e:
             print(f"SmartDeviceException {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
-            discover_suggested=True
+            if "Errno 104" in str(e) or "Connection reset" in str(e): # Unable to query the device 192.168.2.144: [Errno 104] Connection reset by peer
+                raise 
+            else:
+                discover_suggested=True
         except Exception as e:
             print(f"Unexpected exception {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
             raise
