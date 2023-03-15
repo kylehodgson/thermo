@@ -4,12 +4,14 @@ if __name__ == "__main__" and __package__ is None:
     sys.path.append(dirname(sys.path[0]))
 import time
 from bleson import get_provider, Observer, UUID16
-from bleson.logger import log, set_level, ERROR
+#from bleson.logger import log, set_level, ERROR
 from zonemgr.models import TemperatureReading
 
 # Disable warnings
-set_level(ERROR)
+#set_level(ERROR)
 
+import logging
+log = logging.getLogger(__name__)
 
 class GoveeSensor:
 
@@ -29,12 +31,12 @@ class GoveeSensor:
     @staticmethod
     def reading_from_advertisement(advertisement) -> TemperatureReading:
         mfg_data = '{:>7}'.format(int(advertisement.mfg_data.hex()[6:12], 16))
-        temperature=float(20.123)
+        temperature=float(0.0)
         try:
             orig_val=mfg_data[0:4]
             temperature = float(orig_val)/10
-        except ValueError:
-            print(f"Could not convert {orig_val} to float.")
+        except ValueError as e:
+            log.info(f"Could not convert '{orig_val}' to float. mfg_data: {mfg_data} Exception: {e}")
 
         humidity = float(mfg_data[4:7])/10
         battery = int(advertisement.mfg_data.hex()[12:14], 16)
@@ -71,7 +73,7 @@ def discover():
 
 def main() -> int:
     for sensor in discover():
-        print(f"sensor: {sensor}")
+        log.info(f"sensor: {sensor}")
     return 0
 
 

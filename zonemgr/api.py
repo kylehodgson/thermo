@@ -5,7 +5,10 @@ from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.db import ZoneManagerDB
+from plugins import ui
 
+import logging
+log = logging.getLogger(__name__)
 
 # poor dev's dependency injection
 zmdb=ZoneManagerDB()

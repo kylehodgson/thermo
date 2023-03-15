@@ -7,7 +7,11 @@ from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.models import TemperatureReading, ServiceType
+from plugins.ui import Display
 
+
+import logging
+log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class DecisionContext:
@@ -42,17 +46,20 @@ class Thermostat:
     MAXMOER: int
 
     last_reading_time: int
+    last_reading_times: dict
     temp_store: TempReadingStore
     config_store: ConfigStore
     moer_store: MoerReadingStore
     plug_factory: PanelPlugFactory
     plug_service: PanelPlug
+    #display: Display
 
     def __init__(self,
                  temp_store: TempReadingStore,
                  config_store: ConfigStore,
                  moer_store: MoerReadingStore,
                  plug_factory: PanelPlugFactory) -> None:
+    #             display: Display) -> None:
         # if ble advertisements with temperature readings are appearing faster than this rate,
         # ignore them until this many seconds have passed so that the script isnt running constantly
         self.CHECK_INTERVAL = int(5)
@@ -70,19 +77,23 @@ class Thermostat:
         self.ECO_REDUCTION = float(.75)
         # 50 means "the grid is cleaner than it is 50% of the time over the last 30 days"
         self.MAXMOER = 50
-        # set the "last reading time" in the past so that the system will start immediately
-        self.last_reading_time = int(time.time()) - (self.CHECK_INTERVAL * 2)
+        
+        self.last_reading_times={}
 
         self.temp_store = temp_store
         self.config_store = config_store
         self.moer_store = moer_store
         self.plug_factory = plug_factory
-        
-    def too_soon(self) -> bool:
+        #self.display = display
+    
+    def too_soon_for(self, timer: str, check_interval:int) -> bool:
         this_reading_time = int(time.time())
-        elapsed = this_reading_time - self.last_reading_time
-        self.last_reading_time = this_reading_time
-        return elapsed < self.CHECK_INTERVAL
+        if timer in self.last_reading_times:
+            elapsed = this_reading_time - self.last_reading_times[timer]
+        else:
+            elapsed=0
+        self.last_reading_times[timer] = this_reading_time
+        return elapsed < check_interval
 
     def get_schedule_off(self):
         now = datetime.datetime.now()
@@ -91,14 +102,21 @@ class Thermostat:
         return False
 
     async def handle_reading(self, reading: TemperatureReading):
-        print(
-            f"[{self.log_time()}] sensor_id: {reading.sensor_id} "
-            f"temp: {reading.temp} humidity: {reading.humidity} battery: {reading.battery}")
+        if self.too_soon_for(reading.sensor_id,5):
+            return
+        
+        log.info(
+            f"sensor_id: {reading.sensor_id} temp: {reading.temp} humidity: {reading.humidity} battery: {reading.battery}")
 
         (_, config) = self.config_store.get_config_for(reading.sensor_id)
         if not config:
             return
 
+        #if config.location=="Main bedroom" and not self.too_soon_for("Main bedroom display",30):
+        #    self.display.set_current_temp(reading.temp)
+        #    self.display.set_zone_target_temp(config.temp)
+        #    self.display.update()
+        
         self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
 
         self.plug_service = self.plug_factory.get_plug(config)
@@ -164,21 +182,15 @@ class Thermostat:
             return PanelDecision.TURN_OFF
 
         if too_cold and heat_is_off:
-            print(
-                f"[{self.log_time()}] temp {ctx.reading_temp} in room set to "
-                f" {ctx.config_temp} is unacceptably cool given ecoFactor "
-                f" {ecoFactor} and allowable drift {ctx.allowable_drift}, turning on panel")
+            log.info(
+                f"temp {ctx.reading_temp} in room set to {ctx.config_temp} is unacceptably cool given ecoFactor  {ecoFactor} and allowable drift {ctx.allowable_drift}, turning on panel")
             return PanelDecision.TURN_ON
 
         elif too_warm and heat_is_on:
-            print(
-                f"[{self.log_time()}] temp {ctx.reading_temp} in room set to "
-                f" {ctx.config_temp} is unacceptably warm given ecoFactor "
-                f" {ecoFactor} and allowable drift {ctx.allowable_drift}, turning off panel")
+            log.info(
+                f"temp {ctx.reading_temp} in room set to {ctx.config_temp} is unacceptably warm given ecoFactor  {ecoFactor} and allowable drift {ctx.allowable_drift}, turning off panel")
             return PanelDecision.TURN_OFF
 
         else:
             return PanelDecision.DO_NOTHING
 
-    def log_time(self) -> str:
-        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

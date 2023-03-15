@@ -2,6 +2,9 @@ from typing import List
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import MoerReading
 
+import logging
+log = logging.getLogger(__name__)
+
 class MoerReadingStore:
     zmdb: ZoneManagerDB
 

@@ -1,5 +1,8 @@
 from psycopg2 import pool
 
+import logging
+log = logging.getLogger(__name__)
+
 class ZoneManagerDB:
     def __init__(self) -> None:
         self.dbPool=pool.ThreadedConnectionPool(1,5) # reading values from environment

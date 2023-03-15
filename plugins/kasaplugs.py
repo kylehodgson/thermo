@@ -4,6 +4,9 @@ import asyncio
 from kasa import Discover, SmartPlug, SmartDeviceException
 from zonemgr.panel_plug import PanelState, PanelDecision, PanelPlug
 
+import logging
+log = logging.getLogger(__name__)
+
 class KasaPanelPlug(PanelPlug):
     kasa: SmartPlug
     host: str
@@ -27,17 +30,17 @@ class KasaPanelPlug(PanelPlug):
         try:
             await self.kasa.update()
         except SmartDeviceException as e:
-            print(f"SmartDeviceException {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
+            log.info(f"SmartDeviceException {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
             if "Errno 104" in str(e) or "Connection reset" in str(e): # Unable to query the device 192.168.2.144: [Errno 104] Connection reset by peer
                 raise 
             else:
                 discover_suggested=True
         except Exception as e:
-            print(f"Unexpected exception {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
+            log.info(f"Unexpected exception {e} of type {type(e)} on kasa.update with host |{self.host}| and name |{self.name}|")
             raise
         else:
             if self.kasa.alias!=self.name:
-                print(f"plug alias |{self.kasa.alias}| and name |{self.name}| did not match, suggesting discovery.")
+                log.info(f"plug alias |{self.kasa.alias}| and name |{self.name}| did not match, suggesting discovery.")
                 discover_suggested=True
         return discover_suggested
 
@@ -47,7 +50,7 @@ class KasaPanelPlug(PanelPlug):
             for addr, dev in devices.items():
                 await dev.update()
                 if dev.is_plug and dev.alias==self.name:
-                    print(f"discover attempt in KasaPanelPlug found addr {addr} alias |{dev.alias}| ip {dev.host} as a match for original host {self.host} name |{self.name}|, using this new host instead.")
+                    log.info(f"discover attempt in KasaPanelPlug found addr {addr} alias |{dev.alias}| ip {dev.host} as a match for original host {self.host} name |{self.name}|, using this new host instead.")
                     # todo: log this somewhere, or event it somehow ... the config is wrong, and the user doesn't know. probably a DHCP change.
                     self.kasa=dev
                     self.host=dev.host
@@ -95,10 +98,10 @@ def main() -> int:
     loop = asyncio.get_event_loop()
 
     for plug in loop.run_until_complete(discover_plugs()):
-        print(f"{plug['name']}:")
+        log.info(f"{plug['name']}:")
         for property in plug:
             if property != 'name':
-                print(f"\t{property}\t{plug[property]}")
+                log.info(f"\t{property}\t{plug[property]}")
     return 0
 
 

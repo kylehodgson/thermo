@@ -3,6 +3,9 @@ import zonemgr.models as models
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import SensorConfiguration
 
+import logging
+log = logging.getLogger(__name__)
+
 class ConfigStore:
     zmdb: ZoneManagerDB
 

@@ -7,6 +7,9 @@ import asyncio
 import kasaplugs
 import goveesensors
 
+import logging
+log = logging.getLogger(__name__)
+
 async def discover_all(plugsvc=None):
     plugs = await kasaplugs.discover_plugs()
     sensors = goveesensors.discover()
@@ -19,4 +22,4 @@ async def discover_all(plugsvc=None):
 
 if __name__ == '__main__':
     found = asyncio.run(discover_all())
-    print(f"{found}")
+    log.info(f"{found}")

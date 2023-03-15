@@ -1,6 +1,9 @@
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import TemperatureReading
 
+import logging
+log = logging.getLogger(__name__)
+
 class TempReadingStore:
     zmdb: ZoneManagerDB
 
