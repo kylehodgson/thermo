@@ -62,6 +62,9 @@
 							name="service_type" 
 							value="scheduled" {% if sensor.service_type=="scheduled" %}checked{% endif %} >
 						<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
+						{% if sensor.schedule_start_hour and sensor.schedule_stop_hour %}
+							<div class="font-size-sm fst-italic"> (turn heating on between {{ sensor.schedule_start_hour | int -12 }}:00 PM and {{sensor.schedule_stop_hour}}:00 AM)</div>	
+						{% endif %}
 					</div>
 					<div class="form-check">
 						<input 
@@ -80,6 +83,15 @@
 							name="service_type" 
 							value="off" {% if sensor.service_type=="off" %}checked{% endif %}>
 						<label class="form-check-label" for="service_type-off">Off</label>
+					</div>
+					<div class="form-check">
+						<input
+							class="form-check-input"
+							type="radio"
+							id="service_type-presence"
+							name="service_type"
+							value="presence" {% if sensor.service_type=="presence" %}checked{% endif %}>
+						<label class="form-check-label" for="service_type-off">Presence</label>
 					</div>
 				</div><!-- /card-body -->
 				</form>

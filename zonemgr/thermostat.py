@@ -18,6 +18,7 @@ class DecisionContext:
     panel_state: PanelState
     service_type: ServiceType
     schedule_off: bool
+    presence_off: bool
     reading_temp: float
     config_temp: float
     allowable_drift: float
@@ -32,6 +33,8 @@ class DecisionContext:
             return ServiceType.OFF
         if str(ServiceType.ON.name).lower() == value.lower():
             return ServiceType.ON
+        if str(ServiceType.PRESENCE.name).lower() == value.lower():
+            return ServiceType.PRESENCE
         raise Exception(f"Value {value} is not a valid ServiceType.")
 
 
@@ -69,7 +72,7 @@ class Thermostat:
         # integer of the hour to stop the system when its set to "schedule"
         self.SCHEDULE_STOP = 10
         # integer of the hour to start the system when its set to "schedule"
-        self.SCHEDULE_START = 21
+        self.SCHEDULE_START = 20
         # integer - the number of seconds that should pass before we write another record to the db
         # for a given sensor
         self.TEMPERATURE_RECORD_STEP = 60 * 10
@@ -95,11 +98,12 @@ class Thermostat:
         self.last_reading_times[timer] = this_reading_time
         return elapsed < check_interval
 
+    def get_presence_off(self):
+        return True
+
     def get_schedule_off(self):
         now = datetime.datetime.now()
-        if now.hour > self.SCHEDULE_STOP and now.hour < self.SCHEDULE_START:
-            return True
-        return False
+        return self.SCHEDULE_STOP <= now.hour < self.SCHEDULE_START
 
     async def handle_reading(self, reading: TemperatureReading):
         if self.too_soon_for(reading.sensor_id,5):
@@ -128,6 +132,7 @@ class Thermostat:
                 service_type=DecisionContext.get_service_type(
                     config.service_type),
                 schedule_off=self.get_schedule_off(),
+                presence_off=self.get_presence_off(),
                 reading_temp=reading.temp,
                 config_temp=config.temp,
                 allowable_drift=self.ACCEPTABLE_DRIFT,
@@ -149,22 +154,15 @@ class Thermostat:
         moer = self.moer_store.select_latest_moer_reading(
             self.moer_store.get_local_ba_id()).percent
 
-        if moer > self.MAXMOER:
-            return EcoMode.ENABLED
-        return EcoMode.DISABLED
-
-    # def get_panel_state_from(plugSvc) -> PanelState:
-    #     if plugSvc.is_off:
-    #         return PanelState.OFF
-    #     if plugSvc.is_on:
-    #         return PanelState.ON
+        return EcoMode.ENABLED if moer > self.MAXMOER else EcoMode.DISABLED
 
     def get_decision_from(self, ctx: DecisionContext) -> PanelDecision:
         heat_is_off = ctx.panel_state is PanelState.OFF
         heat_is_on = ctx.panel_state is PanelState.ON
         heat_is_disabled = (
-            ctx.service_type is ServiceType.OFF or
-            (ctx.service_type is ServiceType.SCHEDULED and ctx.schedule_off))
+            (ctx.service_type is ServiceType.OFF) or
+            (ctx.service_type is ServiceType.SCHEDULED and ctx.schedule_off) or
+            (ctx.service_type is ServiceType.PRESENCE and ctx.presence_off) )
 
         if ctx.eco_mode is EcoMode.ENABLED:
             ecoFactor = ctx.eco_reduction

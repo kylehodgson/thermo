@@ -1,5 +1,4 @@
 from typing import List, Tuple
-import zonemgr.models as models
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import SensorConfiguration
 
@@ -35,7 +34,7 @@ class ConfigStore:
                 if cursor.rowcount>0:
                     record=cursor.fetchone()
                     id=record[0]
-                    sc=models.SensorConfiguration.parse_obj(record[1])
+                    sc=SensorConfiguration.parse_obj(record[1])
                     return (id, sc)
                 else:
                     return (0, False)
@@ -52,13 +51,17 @@ class ConfigStore:
     def load_config(self):
         return self.get_all_sensor_configs()
 
-    def set_sensor_config(self, sensor_id: str, temp: float, service_type: str, name: str="", location: str="", plug=""):
-        sc=models.SensorConfiguration(sensor_id=sensor_id, temp=temp, service_type=service_type)
-        if name!="":
+    def set_sensor_config(self, sensor_id: str, temp: float, service_type: str, name: str="", location: str="", plug="", schedule_start_hour: int=None, schedule_stop_hour: int=None):
+        sc=SensorConfiguration(sensor_id=sensor_id, temp=temp, service_type=service_type)
+        if name:
             sc.name=name
-        if location!="":
+        if location:
             sc.location=location
-        if plug!="":
+        if plug:
             sc.plug=plug
+        if schedule_start_hour:
+            sc.schedule_start_hour=schedule_start_hour
+        if schedule_stop_hour:
+            sc.schedule_stop_hour=schedule_stop_hour
         self.save(sc)
         return sc

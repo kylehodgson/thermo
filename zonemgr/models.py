@@ -7,11 +7,14 @@ class ServiceType(Enum):
     SCHEDULED=1
     ON=2
     OFF=3
+    PRESENCE=4
 
 class SensorConfiguration(BaseModel):
     sensor_id: str
     temp: float
     service_type: str
+    schedule_start_hour: Optional[int]
+    schedule_stop_hour: Optional[int]
     name: Optional[str]
     location: Optional[str]
     plug: Optional[str]

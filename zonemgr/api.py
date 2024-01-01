@@ -5,7 +5,6 @@ from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.db import ZoneManagerDB
-from plugins import ui
 
 import logging
 log = logging.getLogger(__name__)
@@ -52,11 +51,15 @@ async def update_thermo_configuration(
     service_type: str = Form("service_type"), 
     name: str=Form("name"), 
     location=Form("location"),
+    schedule_start_hour=Form("schedule_start_hour"),
+    schedule_stop_hour=Form("schedule_stop_hour"),
     plug=Form("plug")):
     configsvc.set_sensor_config(
         sensor_id=sensor_id, 
         temp=float(temp), 
         service_type=service_type, 
+        schedule_start_hour=schedule_start_hour,
+        schedule_stop_hour=schedule_stop_hour,
         name=name, 
         location=location,
         plug=plug) 
