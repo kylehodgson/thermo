@@ -7,8 +7,6 @@ from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.models import TemperatureReading, ServiceType
-from plugins.ui import Display
-
 
 import logging
 log = logging.getLogger(__name__)
@@ -39,13 +37,22 @@ class DecisionContext:
 
 
 class Thermostat:
-
+    # if ble advertisements with temperature readings are appearing faster than this rate,
+    # ignore them until this many seconds have passed so that the script isnt running constantly
     CHECK_INTERVAL: int
+    # the amount, in celcius, that the temperature may differ from the specified
+    # temperature before starting/stopping the heater
     ACCEPTABLE_DRIFT: float
+    # integer of the hour to stop the system when its set to "schedule"
     SCHEDULE_STOP: int
+    # integer of the hour to start the system when its set to "schedule"
     SCHEDULE_START: int
+    # integer - the number of seconds that should pass before we write another record to the db
+    # for a given sensor
     TEMPERATURE_RECORD_STEP: int
+    # if the MOER is over the maximum, allow temps to fall this much cooler than normal before turning on the heat
     ECO_REDUCTION: float
+    # 50 means "the grid is cleaner than it is 50% of the time over the last 30 days"
     MAXMOER: int
 
     last_reading_time: int
@@ -55,39 +62,25 @@ class Thermostat:
     moer_store: MoerReadingStore
     plug_factory: PanelPlugFactory
     plug_service: PanelPlug
-    #display: Display
 
     def __init__(self,
                  temp_store: TempReadingStore,
                  config_store: ConfigStore,
                  moer_store: MoerReadingStore,
                  plug_factory: PanelPlugFactory) -> None:
-    #             display: Display) -> None:
-        # if ble advertisements with temperature readings are appearing faster than this rate,
-        # ignore them until this many seconds have passed so that the script isnt running constantly
         self.CHECK_INTERVAL = int(5)
-        # the amount, in celcius, that the temperature may differ from the specified
-        # temperature before starting/stopping the heater
         self.ACCEPTABLE_DRIFT = float(1)
-        # integer of the hour to stop the system when its set to "schedule"
         self.SCHEDULE_STOP = 10
-        # integer of the hour to start the system when its set to "schedule"
         self.SCHEDULE_START = 20
-        # integer - the number of seconds that should pass before we write another record to the db
-        # for a given sensor
         self.TEMPERATURE_RECORD_STEP = 60 * 10
-        # if the MOER is over the maximum, allow temps to fall this much cooler than normal before turning on the heat
         self.ECO_REDUCTION = float(.75)
-        # 50 means "the grid is cleaner than it is 50% of the time over the last 30 days"
         self.MAXMOER = 50
         
         self.last_reading_times={}
-
         self.temp_store = temp_store
         self.config_store = config_store
         self.moer_store = moer_store
         self.plug_factory = plug_factory
-        #self.display = display
     
     def too_soon_for(self, timer: str, check_interval:int) -> bool:
         this_reading_time = int(time.time())
@@ -116,10 +109,12 @@ class Thermostat:
         if not config:
             return
 
-        #if config.location=="Main bedroom" and not self.too_soon_for("Main bedroom display",30):
-        #    self.display.set_current_temp(reading.temp)
-        #    self.display.set_zone_target_temp(config.temp)
-        #    self.display.update()
+        if config.schedule_start_hour:
+            print(f"found schedule config in the DB for {reading.sensor_id} start time was {config.schedule_start_hour}")
+            self.SCHEDULE_START = config.schedule_start_hour
+        if config.schedule_stop_hour:
+            print(f"found schedule config in the DB for {reading.sensor_id} stop time was {config.schedule_stop_hour}")
+            self.SCHEDULE_STOP = config.schedule_stop_hour
         
         self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
 

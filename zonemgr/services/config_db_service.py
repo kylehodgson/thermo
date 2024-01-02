@@ -51,7 +51,15 @@ class ConfigStore:
     def load_config(self):
         return self.get_all_sensor_configs()
 
-    def set_sensor_config(self, sensor_id: str, temp: float, service_type: str, name: str="", location: str="", plug="", schedule_start_hour: int=None, schedule_stop_hour: int=None):
+    def set_sensor_config(self, 
+            sensor_id: str, 
+            temp: float, 
+            service_type: str, 
+            name: str = "", 
+            location: str = "", 
+            plug: str = "", 
+            schedule_start_hour: int = None, 
+            schedule_stop_hour: int = None):
         sc=SensorConfiguration(sensor_id=sensor_id, temp=temp, service_type=service_type)
         if name:
             sc.name=name
