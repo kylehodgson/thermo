@@ -58,18 +58,18 @@ class ConfigStore:
             name: str = "", 
             location: str = "", 
             plug: str = "", 
-            schedule_start_hour: int = None, 
-            schedule_stop_hour: int = None):
-        sc=SensorConfiguration(sensor_id=sensor_id, temp=temp, service_type=service_type)
+            schedule_start_hour: str="", 
+            schedule_stop_hour: str=""):
+        sc=SensorConfiguration(sensor_id=sensor_id, temp=temp, service_type=service_type) #these three are required params, the rest are not
         if name:
             sc.name=name
         if location:
             sc.location=location
         if plug:
             sc.plug=plug
-        if schedule_start_hour:
-            sc.schedule_start_hour=schedule_start_hour
-        if schedule_stop_hour:
-            sc.schedule_stop_hour=schedule_stop_hour
+        if schedule_start_hour.isnumeric():
+            sc.schedule_start_hour=int(schedule_start_hour)
+        if schedule_stop_hour.isnumeric():
+            sc.schedule_stop_hour=int(schedule_stop_hour)
         self.save(sc)
         return sc

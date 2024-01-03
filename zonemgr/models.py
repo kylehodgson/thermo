@@ -13,11 +13,11 @@ class SensorConfiguration(BaseModel):
     sensor_id: str
     temp: float
     service_type: str
-    schedule_start_hour: Optional[int]
-    schedule_stop_hour: Optional[int]
-    name: Optional[str]
-    location: Optional[str]
-    plug: Optional[str]
+    schedule_start_hour: Optional[int] = None
+    schedule_stop_hour: Optional[int] = None
+    name: Optional[str] = None
+    location: Optional[str] = None
+    plug: Optional[str] = None
 
 class TemperatureReading(BaseModel):
     sensor_id: str
