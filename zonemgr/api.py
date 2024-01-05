@@ -4,7 +4,9 @@ from fastapi.templating import Jinja2Templates
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
+from zonemgr.services.presence_db_service import ZonePresenceStore
 from zonemgr.db import ZoneManagerDB
+from zonemgr.models import ZonePresence
 
 import logging
 log = logging.getLogger(__name__)
@@ -14,6 +16,8 @@ zmdb=ZoneManagerDB()
 configsvc = ConfigStore(zmdb)
 tempsvc=TempReadingStore(zmdb)
 moersvc=MoerReadingStore(zmdb)
+presencesvc=ZonePresenceStore(zmdb)
+
 templates = Jinja2Templates(directory="zonemgr/templates")
 
 app = FastAPI()
@@ -64,6 +68,14 @@ async def update_thermo_configuration(
         location=location,
         plug=plug) 
     return templates.TemplateResponse("redirect_home.jinja", {"request": request})
+
+@app.post("/presence/{sensor_id}/{occupancy}", status_code=202)
+def sensor_presence(sensor_id: str, occupancy: str):
+    #p = {"sensor_id": sensor_id, "occupancy": occupancy}
+    zp=ZonePresence(sensor_id=sensor_id, occupancy=occupancy)
+    print(f"presence request posted occupancy {occupancy} for sensor {sensor_id}")      
+    presencesvc.save_if_newer(zp,1) 
+    return zp
 
 @app.get("/config-edit-hx/{sensor_id}", response_class=HTMLResponse)
 async def getConfigEditorFor(request: Request, sensor_id: str):

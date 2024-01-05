@@ -19,6 +19,10 @@ class SensorConfiguration(BaseModel):
     location: Optional[str] = None
     plug: Optional[str] = None
 
+class ZonePresence(BaseModel):
+    sensor_id: str
+    occupancy: str
+
 class TemperatureReading(BaseModel):
     sensor_id: str
     temp: float

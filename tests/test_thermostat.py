@@ -10,7 +10,7 @@ def test_Thermostat_knows_if_the_schedule_is_on_or_off():
     # this test wont handle midnight very well! get_schedule_off has a hard coded datetime.now in it.
     an_hour_ago = (datetime.now() + timedelta(hours=-1)).hour
     an_hour_from_now = (datetime.now() + timedelta(hours=+1)).hour
-    t = Thermostat(None, None, None, None)
+    t = Thermostat(None, None, None, None, None)
     t.SCHEDULE_START = an_hour_ago
     t.SCHEDULE_STOP = an_hour_from_now
     assert t.get_schedule_off() == False
@@ -20,7 +20,7 @@ def test_Thermostat_knows_if_the_schedule_is_on_or_off():
 
 
 def test_Thermostat_turns_on_when_its_too_cold():
-    t = Thermostat(None, None, None, None)
+    t = Thermostat(None, None, None, None, None)
     too_cold = float(17)
 
     ctx = DecisionContext(
@@ -38,7 +38,7 @@ def test_Thermostat_turns_on_when_its_too_cold():
 
 
 def test_Thermostat_does_nothing_when_its_warm_enough():
-    t = Thermostat(None, None, None, None)
+    t = Thermostat(None, None, None, None, None)
 
     desired_temp = float(22)
     allowable_drift = float(1)
@@ -86,7 +86,7 @@ def test_Thermostat_does_nothing_when_its_warm_enough():
 
 
 def test_Thermostat_turns_off_when_its_too_warm():
-    t = Thermostat(None, None, None, None)
+    t = Thermostat(None, None, None, None, None)
     desired_temp = float(22)
     allowable_drift = float(1)
     too_warm = desired_temp + (allowable_drift * float(2))
@@ -106,7 +106,7 @@ def test_Thermostat_turns_off_when_its_too_warm():
 
 
 def test_Thermostat_eco_mode_reduces_temps_correctly():
-    t = Thermostat(None, None, None, None)
+    t = Thermostat(None, None, None, None, None)
     desired_temp = float(22)
     allowable_drift = float(2)
     eco_factor = float(1)
@@ -195,6 +195,7 @@ async def test_Thermostat_handles_readings():
         temp_store=mockTemps,
         config_store=mockConfigs,
         moer_store=mockMoer,
-        plug_factory=plug_factory)
+        plug_factory=plug_factory,
+        presence_store=None)
     await t.handle_reading(mock_reading)
     assert True == True

@@ -16,6 +16,7 @@ from zonemgr.db import ZoneManagerDB
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
+from zonemgr.services.presence_db_service import ZonePresenceStore
 
 class OneLineExceptionFormatter(logging.Formatter):
     def formatException(self, exc_info):
@@ -42,8 +43,10 @@ config_store=ConfigStore(zmdb)
 temp_store=TempReadingStore(zmdb)
 moer_store=MoerReadingStore(zmdb)
 plug_service=PanelPlugFactory()
+presence_store=ZonePresenceStore(zmdb)
+
 #display_service=Display()
-thermostat = Thermostat(temp_store, config_store, moer_store, plug_service)
+thermostat = Thermostat(temp_store, config_store, moer_store, plug_service, presence_store)
 #thermostat = Thermostat(temp_store, config_store, moer_store, plug_service, display_service)
 
 def on_advertisement(advertisement):

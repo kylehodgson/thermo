@@ -6,6 +6,7 @@ from zonemgr.panel_plug import PanelPlug, PanelDecision, PanelPlugFactory, Panel
 from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
+from zonemgr.services.presence_db_service import ZonePresenceStore
 from zonemgr.models import TemperatureReading, ServiceType
 
 import logging
@@ -62,12 +63,14 @@ class Thermostat:
     moer_store: MoerReadingStore
     plug_factory: PanelPlugFactory
     plug_service: PanelPlug
+    presence_store: ZonePresenceStore
 
     def __init__(self,
                  temp_store: TempReadingStore,
                  config_store: ConfigStore,
                  moer_store: MoerReadingStore,
-                 plug_factory: PanelPlugFactory) -> None:
+                 plug_factory: PanelPlugFactory,
+                 presence_store: ZonePresenceStore) -> None:
         self.CHECK_INTERVAL = int(5)
         self.ACCEPTABLE_DRIFT = float(1)
         self.SCHEDULE_STOP = 10
@@ -81,6 +84,7 @@ class Thermostat:
         self.config_store = config_store
         self.moer_store = moer_store
         self.plug_factory = plug_factory
+        self.presence_store = presence_store
     
     def too_soon_for(self, timer: str, check_interval:int) -> bool:
         this_reading_time = int(time.time())
@@ -91,8 +95,8 @@ class Thermostat:
         self.last_reading_times[timer] = this_reading_time
         return elapsed < check_interval
 
-    def get_presence_off(self):
-        return True
+    def get_presence_off(self, presence):
+        return True if hasattr(presence,'occupancy') and presence.occupancy=="occupied" else False 
 
     def get_schedule_off(self):
         now = datetime.datetime.now()
@@ -115,9 +119,10 @@ class Thermostat:
         if config.schedule_stop_hour:
             print(f"found schedule config in the DB for {reading.sensor_id} stop time was {config.schedule_stop_hour}")
             self.SCHEDULE_STOP = config.schedule_stop_hour
-        
-        self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
+       
+        presence = self.presence_store.get_latest_zone_presence_for(reading.sensor_id)
 
+        self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
         self.plug_service = self.plug_factory.get_plug(config)
         self.plug_service.set_host(config.plug, config.name)
 
@@ -127,7 +132,7 @@ class Thermostat:
                 service_type=DecisionContext.get_service_type(
                     config.service_type),
                 schedule_off=self.get_schedule_off(),
-                presence_off=self.get_presence_off(),
+                presence_off=self.get_presence_off(presence),
                 reading_temp=reading.temp,
                 config_temp=config.temp,
                 allowable_drift=self.ACCEPTABLE_DRIFT,
