@@ -1,5 +1,6 @@
 
 import pytest
+from types import SimpleNamespace
 from datetime import datetime, timedelta
 from zonemgr.panel_plug import EcoMode, PanelDecision, PanelState, PanelPlugFactory
 from zonemgr.thermostat import Thermostat, DecisionContext
@@ -8,15 +9,23 @@ from zonemgr.services.moer_reading_db_service import MoerReading
 
 def test_Thermostat_knows_if_the_schedule_is_on_or_off():
     # this test wont handle midnight very well! get_schedule_off has a hard coded datetime.now in it.
+    this_hour = (datetime.now()).hour
+    tomorrow_morning = 9
     an_hour_ago = (datetime.now() + timedelta(hours=-1)).hour
     an_hour_from_now = (datetime.now() + timedelta(hours=+1)).hour
     t = Thermostat(None, None, None, None, None)
-    t.SCHEDULE_START = an_hour_ago
-    t.SCHEDULE_STOP = an_hour_from_now
-    assert t.get_schedule_off() == False
-    t.SCHEDULE_STOP = an_hour_ago
-    t.SCHEDULE_START = an_hour_from_now
-    assert t.get_schedule_off() == True
+    
+    config_scheduled_on = SimpleNamespace()
+    config_scheduled_on.schedule_start_hour = str(this_hour)
+    config_scheduled_on.schedule_stop_hour = str(tomorrow_morning)
+    
+    assert t.get_schedule_off(config_scheduled_on) == False
+
+    config_scheduled_off = SimpleNamespace()
+    config_scheduled_off.schedule_start_hour = str(an_hour_from_now)
+    config_scheduled_off.schedule_stop_hour = str(an_hour_ago)
+
+    assert t.get_schedule_off(config_scheduled_off) == True
 
 
 def test_Thermostat_turns_on_when_its_too_cold():

@@ -12,11 +12,11 @@ import logging
 log = logging.getLogger(__name__)
 
 # poor dev's dependency injection
-zmdb=ZoneManagerDB()
+zmdb = ZoneManagerDB()
 configsvc = ConfigStore(zmdb)
-tempsvc=TempReadingStore(zmdb)
-moersvc=MoerReadingStore(zmdb)
-presencesvc=ZonePresenceStore(zmdb)
+tempsvc = TempReadingStore(zmdb)
+moersvc = MoerReadingStore(zmdb)
+presencesvc = ZonePresenceStore(zmdb)
 
 templates = Jinja2Templates(directory="zonemgr/templates")
 

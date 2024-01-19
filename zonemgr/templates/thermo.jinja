@@ -63,6 +63,8 @@
 							value="scheduled" {% if sensor.service_type=="scheduled" %}checked{% endif %} >
 						<label class="form-check-label" for="service_type-scheduled">Follow schedule</label>
 						{% if sensor.schedule_start_hour and sensor.schedule_stop_hour %}
+							<input type="hidden" name="schedule_start_hour" value="{{sensor.schedule_start_hour}}">
+							<input type="hidden" name="schedule_stop_hour" value="{{sensor.schedule_stop_hour}}">
 							<div class="font-size-sm fst-italic"> (turn heating on between {{ sensor.schedule_start_hour | int -12 }}:00 PM and {{sensor.schedule_stop_hour}}:00 AM)</div>	
 						{% endif %}
 					</div>

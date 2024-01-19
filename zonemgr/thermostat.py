@@ -44,10 +44,6 @@ class Thermostat:
     # the amount, in celcius, that the temperature may differ from the specified
     # temperature before starting/stopping the heater
     ACCEPTABLE_DRIFT: float
-    # integer of the hour to stop the system when its set to "schedule"
-    SCHEDULE_STOP: int
-    # integer of the hour to start the system when its set to "schedule"
-    SCHEDULE_START: int
     # integer - the number of seconds that should pass before we write another record to the db
     # for a given sensor
     TEMPERATURE_RECORD_STEP: int
@@ -73,12 +69,9 @@ class Thermostat:
                  presence_store: ZonePresenceStore) -> None:
         self.CHECK_INTERVAL = int(5)
         self.ACCEPTABLE_DRIFT = float(1)
-        self.SCHEDULE_STOP = 10
-        self.SCHEDULE_START = 20
         self.TEMPERATURE_RECORD_STEP = 60 * 10
         self.ECO_REDUCTION = float(.75)
         self.MAXMOER = 50
-        
         self.last_reading_times={}
         self.temp_store = temp_store
         self.config_store = config_store
@@ -86,21 +79,25 @@ class Thermostat:
         self.plug_factory = plug_factory
         self.presence_store = presence_store
     
-    def too_soon_for(self, timer: str, check_interval:int) -> bool:
+    def too_soon_for(self, sensor: str, check_interval: int) -> bool:
         this_reading_time = int(time.time())
-        if timer in self.last_reading_times:
-            elapsed = this_reading_time - self.last_reading_times[timer]
-        else:
-            elapsed=0
-        self.last_reading_times[timer] = this_reading_time
+        elapsed = this_reading_time - self.last_reading_times[sensor] if sensor in self.last_reading_times else 0
+        self.last_reading_times[sensor] = this_reading_time
         return elapsed < check_interval
 
-    def get_presence_off(self, presence):
-        return True if hasattr(presence,'occupancy') and presence.occupancy=="occupied" else False 
+    def get_presence_off(self, reading):
+        presence = self.presence_store.get_latest_zone_presence_for(reading.sensor_id)
+        log.info(f"checking presence sensor for {reading.sensor_id}, found presence {presence}")
+        return True if hasattr(presence,'occupancy') and presence.occupancy=="unoccupied" else False 
 
-    def get_schedule_off(self):
+    def get_schedule_off(self, config):
         now = datetime.datetime.now()
-        return self.SCHEDULE_STOP <= now.hour < self.SCHEDULE_START
+        start = int(config.schedule_start_hour) if config.schedule_start_hour else 0
+        stop = int(config.schedule_stop_hour) if config.schedule_stop_hour else 0
+
+        stop = stop+24 if start > stop else stop
+        log.info(f"call to get_schedule_off with config {config} start is {start} stop is {stop} now.hour is {now.hour} will return {not(start <= now.hour < stop)}") 
+        return not(start <= now.hour < stop)
 
     async def handle_reading(self, reading: TemperatureReading):
         if self.too_soon_for(reading.sensor_id,5):
@@ -113,32 +110,24 @@ class Thermostat:
         if not config:
             return
 
-        if config.schedule_start_hour:
-            print(f"found schedule config in the DB for {reading.sensor_id} start time was {config.schedule_start_hour}")
-            self.SCHEDULE_START = config.schedule_start_hour
-        if config.schedule_stop_hour:
-            print(f"found schedule config in the DB for {reading.sensor_id} stop time was {config.schedule_stop_hour}")
-            self.SCHEDULE_STOP = config.schedule_stop_hour
-       
-        presence = self.presence_store.get_latest_zone_presence_for(reading.sensor_id)
-
         self.temp_store.save_if_newer(reading, self.TEMPERATURE_RECORD_STEP)
         self.plug_service = self.plug_factory.get_plug(config)
         self.plug_service.set_host(config.plug, config.name)
 
-        decision = self.get_decision_from(
-            DecisionContext(
+        context = DecisionContext(
                 panel_state=await self.plug_service.get_state(),
                 service_type=DecisionContext.get_service_type(
                     config.service_type),
-                schedule_off=self.get_schedule_off(),
-                presence_off=self.get_presence_off(presence),
+                schedule_off=self.get_schedule_off(config),
+                presence_off=self.get_presence_off(reading),
                 reading_temp=reading.temp,
                 config_temp=config.temp,
                 allowable_drift=self.ACCEPTABLE_DRIFT,
                 eco_mode=self.get_eco_mode(),
-                eco_reduction=self.ECO_REDUCTION))
-
+                eco_reduction=self.ECO_REDUCTION)
+        log.info(f"context {context}")
+        decision = self.get_decision_from(context)
+        log.info(f"decision {decision}")
         await self.plug_service.set_state(decision)
 
         # if decision is PanelDecision.DO_NOTHING:
