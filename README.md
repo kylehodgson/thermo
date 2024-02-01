@@ -79,7 +79,7 @@ uvicorn zonemgr.api:app --host 0.0.0.0 --port 8888
 ## Run the Install script as root to install the files and start the service
 ```bash
 cd ~/projects/thermo
-sudo ./install.sh
+sudo ./scripts/install.sh
 ```
 
 ## Run tests
