@@ -82,6 +82,11 @@ async def getConfigEditorFor(request: Request, sensor_id: str):
     (id,sensor)=configsvc.get_config_for(sensor_id)
     return templates.TemplateResponse("edit_config.jinja", {"request": request, "sensor": sensor, "id": id})
 
+@app.get("/view-hx/{sensor_id}", response_class=HTMLResponse)
+async def getViewFor(request: Request, sensor_id: str):
+    (id, sensor)=configsvc.get_config_for(sensor_id)
+    return templates.TemplateResponse("view_zone.jinja", {"request": request, "sensor": sensor, "id": id})
+
 @app.get("/moer-readings/")
 async def get_moer_readings(request: Request):
     readings = moersvc.get_moer_readings_for(moersvc.get_local_ba_id(),5)

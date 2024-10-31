@@ -1,35 +1,47 @@
 <html>
 	<head>
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+		<style>
+			small { color: #888; font-size: .6em; }
+		</style>
+		<script>
+			window.onload = function() {
+				const value = document.querySelector("#temp-value");
+				const input = document.querySelector("#temp-{{sensor['sensor_id']}}");
+				value.textContent = input.value;
+				input.addEventListener("input", (event) => {
+					value.textContent = event.target.value;
+				});
+			}
+		</script>	
 	</head>
     <body >     
     <div class="container w-75 p-3" id="config_editor">
 
         <div class="card" style="width: 18rem;">
-            <h5 class="card-header bg-dark text-white">{{sensor['sensor_id']}}</h5>
+            <h5 class="card-header bg-dark text-white">{{sensor['name']}}</h5>
             <div class="card-body">
                 <form>
-                    <input type="hidden" id="i_sensor_id" name="sensor_id" value="{{sensor['sensor_id']}}">
-                    <input type="hidden" id="i_row_id" name="id" value="{{id}}">
                     <div class="form-group">
-                        <label for="i_sensorname">Plug name</label>
-                        <input type="text" class="form-control" id="i_sensorname" value="{{sensor['name']}}" name="name">
-                    </div>
-                    <div class="form-group">
-                        <label for="i_sensorlocation">Sensor location</label>
-                        <input type="text" class="form-control" id="i_sensorlocation" value="{{sensor['location']}}" name="location">
+                        <label for="i_sensorlocation">in {{sensor['location']}}</label>
+                        <input type="hidden" class="form-control" id="i_sensorlocation" value="{{sensor['location']}}" name="location">
                     </div> 
                     <div class="form-group">
-                        <label for="i_sensorlocation">Plug IP address</label>
-                        <input type="text" class="form-control" id="i_sensorlocation" value="{{sensor['plug']}}" name="plug" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
-                    </div> 
-                    <div class="form-group">
-                        <label for="temp-{{sensor['sensor_id']}}">Desired temperature</label>
+                        <label for="temp-{{sensor['sensor_id']}}">Temperature setting:</label>
                         <div class="input-group">
-                            <input class="form-control-lg" type="text" id="temp-{{sensor['sensor_id']}}" size="4" name="temp" value="{{sensor['temp']}}">
-                            <span class="input-group-text">° C</span>
+                            <span class="fs-1 fw-bolder"><output id="temp-value"></output>° C</span>
+                            <input class="form-range" type="range" id="temp-{{sensor['sensor_id']}}" step="0.5" name="temp" value="{{sensor['temp']}}"
+				min="14" max="24">
                         </div>
                     </div>
+		    <button 
+                                                type="button" 
+                                                class="btn btn-primary btn-lg" 
+                        hx-post="/thermo-hx/" 
+                                                hx-target="#config_editor" 
+                                                hx-swap="outerHTML">Save</button>
+	    </div>
+	    <div class="card-footer text-muted">
                     <div class="form-group">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" id="service_type-scheduled" name="service_type" 
@@ -56,12 +68,17 @@
 			    <label class="form-check-label" for="service_type-presence">Presence</label>
 			</div>
                     </div>
-                    <button 
-						type="button" 
-						class="btn btn-primary btn-lg" 
-                        hx-post="/thermo-hx/" 
-						hx-target="#config_editor" 
-						hx-swap="outerHTML">Save</button>
+		   <input type="hidden" id="i_sensor_id" name="sensor_id" value="{{sensor['sensor_id']}}">
+                    <input type="hidden" id="i_row_id" name="id" value="{{id}}">
+                    <div class="form-group">
+                        <label for="i_sensorname"><small>{{sensor['sensor_id']}}</small></label>
+                        <input type="hidden" class="form-control" id="i_sensorname" value="{{sensor['name']}}" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="i_sensorlocation"><small>{{sensor['plug']}}</small></label>
+                        <input type="hidden" class="form-control" id="i_sensorlocation" value="{{sensor['plug']}}" name="plug" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+                    </div>
+
                 </form>
             </div>
         </div>
