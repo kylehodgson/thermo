@@ -66,7 +66,7 @@ async def update_thermo_configuration(
         schedule_stop_hour=schedule_stop_hour,
         name=name, 
         location=location,
-        plug=plug) 
+        plug=plug)
     return templates.TemplateResponse("redirect_home.jinja", {"request": request})
 
 @app.post("/presence/{sensor_id}/{occupancy}", status_code=202)
