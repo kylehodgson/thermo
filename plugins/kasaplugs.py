@@ -54,6 +54,8 @@ class KasaPanelPlug(PanelPlug):
                     # todo: log this somewhere, or event it somehow ... the config is wrong, and the user doesn't know. probably a DHCP change.
                     self.kasa=dev
                     self.host=dev.host
+        
+        await self.kasa.update()
 
         if self.kasa.is_off:
             return PanelState.OFF
