@@ -27,8 +27,8 @@ def shutdown_event():
     zmdb.shutDown()
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
-    return templates.TemplateResponse("index.html", {"request": {}})
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/thermo-hx/", response_class=HTMLResponse)
 async def get_thermo_ui(request: Request):
@@ -49,15 +49,15 @@ def get_multizone_view():
             
 @app.post("/thermo-hx/", response_class=HTMLResponse)
 async def update_thermo_configuration(
-    request: Request, 
-    sensor_id: str = Form("sensor_id"), 
-    temp: str = Form("temp"), 
-    service_type: str = Form("service_type"), 
-    name: str=Form("name"), 
-    location=Form("location"),
-    schedule_start_hour=Form("schedule_start_hour"),
-    schedule_stop_hour=Form("schedule_stop_hour"),
-    plug=Form("plug")):
+    request: Request,
+    sensor_id: str = Form("sensor_id"),
+    temp: str = Form("temp"),
+    service_type: str = Form("service_type"),
+    name: str = Form("name"),
+    location: str = Form("location"),
+    schedule_start_hour: str = Form("schedule_start_hour"),
+    schedule_stop_hour: str = Form("schedule_stop_hour"),
+    plug: str = Form("plug")):
     configsvc.set_sensor_config(
         sensor_id=sensor_id, 
         temp=float(temp), 
@@ -71,10 +71,9 @@ async def update_thermo_configuration(
 
 @app.post("/presence/{sensor_id}/{occupancy}", status_code=202)
 def sensor_presence(sensor_id: str, occupancy: str):
-    #p = {"sensor_id": sensor_id, "occupancy": occupancy}
-    zp=ZonePresence(sensor_id=sensor_id, occupancy=occupancy)
-    print(f"presence request posted occupancy {occupancy} for sensor {sensor_id}")      
-    presencesvc.save_if_newer(zp,1) 
+    zp = ZonePresence(sensor_id=sensor_id, occupancy=occupancy)
+    log.info(f"presence request posted occupancy {occupancy} for sensor {sensor_id}")
+    presencesvc.save_if_newer(zp, 1)
     return zp
 
 @app.get("/config-edit-hx/{sensor_id}", response_class=HTMLResponse)

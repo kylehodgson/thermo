@@ -1,4 +1,5 @@
-from typing import List
+import json
+from typing import List, Optional
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import MoerReading
 
@@ -25,23 +26,24 @@ class MoerReadingStore:
                                  (reading.json(), 10, reading.ba_id))
                 conn.commit()
 
-    def get_moer_readings_for(self, ba_id: str, days: int) ->List[MoerReading]:
-        criteria="""{"ba_id": "%s"}""" % ba_id
-        readings=[]
+    def get_moer_readings_for(self, ba_id: str, days: int) -> List[MoerReading]:
+        criteria = json.dumps({"ba_id": ba_id})
+        readings = []
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select reading from public.moer_readings where reading_time > current_date - interval '%s' day and reading @> %s ;""" , (days, criteria))
+                cursor.execute("""select reading from public.moer_readings where reading_time > current_date - interval '%s' day and reading @> %s ;""", (days, criteria))
                 for (record,) in cursor:
                     readings.append(MoerReading.parse_obj(record))
         return readings
         
     
-    def select_latest_moer_reading(self,ba_id: str) -> MoerReading:
-        criteria="""{"ba_id": "%s"}""" % ba_id
+    def select_latest_moer_reading(self, ba_id: str) -> Optional[MoerReading]:
+        criteria = json.dumps({"ba_id": ba_id})
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select reading from public.moer_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""" , (criteria, ))
-                if cursor.rowcount>0:
-                    (reading,)=cursor.fetchone()
+                cursor.execute("""select reading from public.moer_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""", (criteria,))
+                if cursor.rowcount > 0:
+                    (reading,) = cursor.fetchone()
                     return MoerReading.parse_obj(reading)
+        return None
 

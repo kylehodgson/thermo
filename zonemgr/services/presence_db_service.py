@@ -1,3 +1,5 @@
+import json
+from typing import Optional
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import ZonePresence
 
@@ -21,13 +23,14 @@ class ZonePresenceStore:
                                  (presence.json(), seconds_elapsed, presence.sensor_id))
                 conn.commit()
 
-    def get_latest_zone_presence_for(self,sensor_id: str) -> ZonePresence:
-        criteria="""{"sensor_id": "%s"}""" % sensor_id
+    def get_latest_zone_presence_for(self, sensor_id: str) -> Optional[ZonePresence]:
+        criteria = json.dumps({"sensor_id": sensor_id})
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select zone_presence from public.zone_presence where zone_presence @> %s ORDER BY presence_time desc LIMIT 1;""" , (criteria, ))
-                if cursor.rowcount>0:
-                    (record,)=cursor.fetchone()
+                cursor.execute("""select zone_presence from public.zone_presence where zone_presence @> %s ORDER BY presence_time desc LIMIT 1;""", (criteria,))
+                if cursor.rowcount > 0:
+                    (record,) = cursor.fetchone()
                     return ZonePresence.parse_obj(record)
+        return None
 
 

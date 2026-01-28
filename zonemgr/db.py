@@ -11,7 +11,7 @@ class ZoneManagerDB:
         self.conn= self.dbPool.getconn()
         return self.conn
 
-    def __exit__(self,two,three,four):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.dbPool.putconn(self.conn)
 
     def shutDown(self):

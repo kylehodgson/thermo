@@ -7,7 +7,7 @@ from zonemgr.services.config_db_service import ConfigStore
 from zonemgr.services.temp_reading_db_service import TempReadingStore
 from zonemgr.services.moer_reading_db_service import MoerReadingStore
 from zonemgr.services.presence_db_service import ZonePresenceStore
-from zonemgr.models import TemperatureReading, ServiceType
+from zonemgr.models import TemperatureReading, ServiceType, SensorConfiguration
 
 import logging
 log = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class DecisionContext:
             return ServiceType.ON
         if str(ServiceType.PRESENCE.name).lower() == value.lower():
             return ServiceType.PRESENCE
-        raise Exception(f"Value {value} is not a valid ServiceType.")
+        raise ValueError(f"Value {value} is not a valid ServiceType.")
 
 
 class Thermostat:
@@ -85,12 +85,14 @@ class Thermostat:
         self.last_reading_times[sensor] = this_reading_time
         return elapsed < check_interval
 
-    def get_presence_off(self, reading):
+    def get_presence_off(self, reading: TemperatureReading) -> bool:
         presence = self.presence_store.get_latest_zone_presence_for(reading.sensor_id)
         log.info(f"checking presence sensor for {reading.sensor_id}, found presence {presence}")
-        return True if hasattr(presence,'occupancy') and presence.occupancy=="unoccupied" else False 
+        if presence is None:
+            return False
+        return presence.occupancy == "unoccupied"
 
-    def get_schedule_off(self, config):
+    def get_schedule_off(self, config: SensorConfiguration) -> bool:
         now = datetime.datetime.now()
         start = int(config.schedule_start_hour) if config.schedule_start_hour else 0
         stop = int(config.schedule_stop_hour) if config.schedule_stop_hour else 0

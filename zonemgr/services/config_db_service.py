@@ -1,4 +1,5 @@
-from typing import List, Tuple
+import json
+from typing import List, Tuple, Optional
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import SensorConfiguration
 
@@ -11,8 +12,8 @@ class ConfigStore:
     def __init__(self, zmdb: ZoneManagerDB) -> None:
         self.zmdb=zmdb
 
-    def save(self,sc):
-        id,sc_record=self.get_config_for(sc.sensor_id)
+    def save(self, sc: SensorConfiguration) -> int:
+        id, sc_record = self.get_config_for(sc.sensor_id)
         with self.zmdb as conn: # reading values from environment
             with conn.cursor() as cursor:
                 if sc_record:
@@ -26,18 +27,18 @@ class ConfigStore:
                 conn.commit()
         return id
 
-    def get_config_for(self,sensor: str) -> Tuple[int,SensorConfiguration]:
-        criteria="""{"sensor_id": "%s"}""" % sensor
+    def get_config_for(self, sensor: str) -> Tuple[int, Optional[SensorConfiguration]]:
+        criteria = json.dumps({"sensor_id": sensor})
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select id, config from public.sensor_configurations where config @> %s;""" , (criteria, ))
-                if cursor.rowcount>0:
-                    record=cursor.fetchone()
-                    id=record[0]
-                    sc=SensorConfiguration.parse_obj(record[1])
+                cursor.execute("""select id, config from public.sensor_configurations where config @> %s;""", (criteria,))
+                if cursor.rowcount > 0:
+                    record = cursor.fetchone()
+                    id = record[0]
+                    sc = SensorConfiguration.parse_obj(record[1])
                     return (id, sc)
                 else:
-                    return (0, False)
+                    return (0, None)
 
     def get_all_sensor_configs(self) -> List[SensorConfiguration]:
         config=[]
@@ -47,9 +48,6 @@ class ConfigStore:
                 for row in cursor:
                     config.append(row[0])
         return config
-
-    def load_config(self):
-        return self.get_all_sensor_configs()
 
     def set_sensor_config(self, 
             sensor_id: str, 

@@ -1,3 +1,5 @@
+import json
+from typing import Optional
 from zonemgr.db import ZoneManagerDB
 from zonemgr.models import TemperatureReading
 
@@ -21,13 +23,14 @@ class TempReadingStore:
                                  (reading.json(), seconds_elapsed, reading.sensor_id))
                 conn.commit()
 
-    def get_latest_temperature_reading_for(self,sensor_id: str) -> TemperatureReading:
-        criteria="""{"sensor_id": "%s"}""" % sensor_id
+    def get_latest_temperature_reading_for(self, sensor_id: str) -> Optional[TemperatureReading]:
+        criteria = json.dumps({"sensor_id": sensor_id})
         with self.zmdb as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""select reading from public.temperature_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""" , (criteria, ))
-                if cursor.rowcount>0:
-                    (record,)=cursor.fetchone()
+                cursor.execute("""select reading from public.temperature_readings where reading @> %s ORDER BY reading_time desc LIMIT 1;""", (criteria,))
+                if cursor.rowcount > 0:
+                    (record,) = cursor.fetchone()
                     return TemperatureReading.parse_obj(record)
+        return None
 
 
